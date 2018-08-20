@@ -89,6 +89,11 @@ func (p *peer) getBlockByHeight(height uint64) bool {
 	return p.TrySend(BlockchainChannel, msg)
 }
 
+func (p *peer) getMerkleBlock(height uint64, hash [32]byte) bool {
+	msg := struct{ BlockchainMessage }{NewGetMerkleBlockMessage(height, hash)}
+	return p.TrySend(BlockchainChannel, msg)
+}
+
 func (p *peer) getBlocks(locator []*bc.Hash, stopHash *bc.Hash) bool {
 	msg := struct{ BlockchainMessage }{NewGetBlocksMessage(locator, stopHash)}
 	return p.TrySend(BlockchainChannel, msg)
@@ -296,6 +301,23 @@ func (ps *peerSet) broadcastTx(tx *types.Tx) error {
 			continue
 		}
 		peer.markTransaction(&tx.ID)
+	}
+	return nil
+}
+
+func (ps *peerSet) broadcastAddr(addr []byte) error {
+	msg, err := NewFilterAddMessage(addr)
+	if err != nil {
+		return errors.Wrap(err, "fail on broadcast addr")
+	}
+
+	//peers := ps.peersWithoutTx(&tx.ID)
+	for _, peer := range ps.peers {
+		if ok := peer.TrySend(BlockchainChannel, struct{ BlockchainMessage }{msg}); !ok {
+			ps.removePeer(peer.ID())
+			continue
+		}
+		//peer.markTransaction(&tx.ID)
 	}
 	return nil
 }

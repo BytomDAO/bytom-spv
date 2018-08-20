@@ -164,7 +164,7 @@ func NewDefaultListener(protocol string, lAddr string, skipUPNP bool) (Listener,
 //OnStart start listener
 func (l *DefaultListener) OnStart() error {
 	l.BaseService.OnStart()
-	go l.listenRoutine()
+	//go l.listenRoutine()
 	return nil
 }
 

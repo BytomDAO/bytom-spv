@@ -26,6 +26,7 @@ import (
 
 const (
 	maxAccountCache = 1000
+	maxAddrSize     = 10000
 )
 
 var (
@@ -94,6 +95,8 @@ type Manager struct {
 	delayedACPsMu sync.Mutex
 	delayedACPs   map[*txbuilder.TemplateBuilder][]*CtrlProgram
 
+	NewAddrCh chan *CtrlProgram
+
 	accIndexMu sync.Mutex
 	accountMu  sync.Mutex
 }
@@ -107,6 +110,7 @@ func NewManager(walletDB dbm.DB, chain *protocol.Chain) *Manager {
 		cache:       lru.New(maxAccountCache),
 		aliasCache:  lru.New(maxAccountCache),
 		delayedACPs: make(map[*txbuilder.TemplateBuilder][]*CtrlProgram),
+		NewAddrCh:   make(chan *CtrlProgram, maxAddrSize),
 	}
 }
 
@@ -427,7 +431,13 @@ func (m *Manager) createAddress(account *Account, change bool) (cp *CtrlProgram,
 	if err != nil {
 		return nil, err
 	}
-	return cp, m.insertControlPrograms(cp)
+	if err = m.insertControlPrograms(cp); err != nil {
+		return nil, err
+	}
+	if !change {
+		m.NewAddrCh <- cp
+	}
+	return cp, nil
 }
 
 func (m *Manager) createP2PKH(account *Account, change bool) (*CtrlProgram, error) {

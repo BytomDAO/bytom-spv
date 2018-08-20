@@ -36,6 +36,11 @@ type blockMsg struct {
 	peerID string
 }
 
+type merkleBlockMsg struct {
+	merkleBlock *types.MerkleBlock
+	peerID      string
+}
+
 type blocksMsg struct {
 	blocks []*types.Block
 	peerID string
@@ -50,8 +55,10 @@ type blockKeeper struct {
 	chain Chain
 	peers *peerSet
 
-	syncPeer         *peer
-	blockProcessCh   chan *blockMsg
+	syncPeer             *peer
+	blockProcessCh       chan *blockMsg
+	merkleBlockProcessCh chan *merkleBlockMsg
+
 	blocksProcessCh  chan *blocksMsg
 	headersProcessCh chan *headersMsg
 
@@ -113,6 +120,19 @@ func (bk *blockKeeper) blockLocator() []*bc.Hash {
 	return locator
 }
 
+func (bk *blockKeeper) merkleBlockToBlock(merkleBlock *types.MerkleBlock) (*types.Block, error) {
+	block := &types.Block{
+		BlockHeader:  merkleBlock.BlockHeader,
+		Transactions: merkleBlock.Transactions,
+	}
+	return block, nil
+}
+
+func (bk *blockKeeper) ProcessMerkleBlock(merkleBlock *types.MerkleBlock) (bool, error) {
+	block, _ := bk.merkleBlockToBlock(merkleBlock)
+	return bk.chain.ProcessBlock(block)
+}
+
 func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 	bk.resetHeaderState()
 	lastHeader := bk.headerList.Back().Value.(*types.BlockHeader)
@@ -138,39 +158,66 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 
 	fastHeader := bk.headerList.Front()
 	for bk.chain.BestBlockHeight() < checkPoint.Height {
-		locator := bk.blockLocator()
-		blocks, err := bk.requireBlocks(locator, &checkPoint.Hash)
+		hash := fastHeader.Value.(*types.BlockHeader).Hash()
+		merkleBlock, err := bk.requireMerkleBlock(fastHeader.Value.(*types.BlockHeader).Height, &hash)
 		if err != nil {
 			return err
 		}
-
-		if len(blocks) == 0 {
-			return errors.Wrap(errPeerMisbehave, "requireBlocks return empty list")
+		bk.VerifyMerkleBlock(fastHeader.Value.(*types.BlockHeader), merkleBlock)
+		blockHash := merkleBlock.Hash()
+		//if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
+		//	return errPeerMisbehave
+		//}
+		seed, err := bk.chain.CalcNextSeed(&merkleBlock.PreviousBlockHash)
+		if err != nil {
+			return errors.Wrap(err, "fail on fastBlockSync calculate seed")
 		}
-
-		for _, block := range blocks {
-			if fastHeader = fastHeader.Next(); fastHeader == nil {
-				return errors.New("get block than is higher than checkpoint")
-			}
-
-			blockHash := block.Hash()
-			if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
-				return errPeerMisbehave
-			}
-
-			seed, err := bk.chain.CalcNextSeed(&block.PreviousBlockHash)
-			if err != nil {
-				return errors.Wrap(err, "fail on fastBlockSync calculate seed")
-			}
-
-			tensority.AIHash.AddCache(&blockHash, seed, &bc.Hash{})
-			_, err = bk.chain.ProcessBlock(block)
-			tensority.AIHash.RemoveCache(&blockHash, seed)
-			if err != nil {
-				return errors.Wrap(err, "fail on fastBlockSync process block")
-			}
+		tensority.AIHash.AddCache(&blockHash, seed, &bc.Hash{})
+		_, err = bk.ProcessMerkleBlock(merkleBlock)
+		tensority.AIHash.RemoveCache(&blockHash, seed)
+		if err != nil {
+			return errors.Wrap(err, "fail on fastBlockSync process block")
 		}
 	}
+	//locator := bk.blockLocator()
+	//blocks, err := bk.requireBlocks(locator, &checkPoint.Hash)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if len(blocks) == 0 {
+	//	return errors.Wrap(errPeerMisbehave, "requireBlocks return empty list")
+	//}
+	//	for ;fastHeader = fastHeader.Next(); fastHeader == nil {
+	//	blocks, err := bk.requireMerkleBlock(fastHeader.Value.(*types.BlockHeader).Height, fastHeader.Value.(*types.BlockHeader).Hash())
+	//	if err != nil {
+	//	return err
+	//}
+
+	//}
+	//for _, block := range blocks {
+	//	if fastHeader = fastHeader.Next(); fastHeader == nil {
+	//		return errors.New("get block than is higher than checkpoint")
+	//	}
+	//
+	//	blockHash := block.Hash()
+	//	if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
+	//		return errPeerMisbehave
+	//	}
+	//
+	//	seed, err := bk.chain.CalcNextSeed(&block.PreviousBlockHash)
+	//	if err != nil {
+	//		return errors.Wrap(err, "fail on fastBlockSync calculate seed")
+	//	}
+	//
+	//	tensority.AIHash.AddCache(&blockHash, seed, &bc.Hash{})
+	//	_, err = bk.chain.ProcessBlock(block)
+	//	tensority.AIHash.RemoveCache(&blockHash, seed)
+	//	if err != nil {
+	//		return errors.Wrap(err, "fail on fastBlockSync process block")
+	//	}
+	//}
+	//}
 	return nil
 }
 
@@ -254,6 +301,10 @@ func (bk *blockKeeper) processBlock(peerID string, block *types.Block) {
 	bk.blockProcessCh <- &blockMsg{block: block, peerID: peerID}
 }
 
+func (bk *blockKeeper) processMerkleBlock(peerID string, block *types.MerkleBlock) {
+	bk.merkleBlockProcessCh <- &merkleBlockMsg{merkleBlock: block, peerID: peerID}
+}
+
 func (bk *blockKeeper) processBlocks(peerID string, blocks []*types.Block) {
 	bk.blocksProcessCh <- &blocksMsg{blocks: blocks, peerID: peerID}
 }
@@ -265,12 +316,12 @@ func (bk *blockKeeper) processHeaders(peerID string, headers []*types.BlockHeade
 func (bk *blockKeeper) regularBlockSync(wantHeight uint64) error {
 	i := bk.chain.BestBlockHeight() + 1
 	for i <= wantHeight {
-		block, err := bk.requireBlock(i)
+		block, err := bk.requireMerkleBlock(i, nil)
 		if err != nil {
 			return err
 		}
 
-		isOrphan, err := bk.chain.ProcessBlock(block)
+		isOrphan, err := bk.ProcessMerkleBlock(block)
 		if err != nil {
 			return err
 		}
@@ -304,6 +355,37 @@ func (bk *blockKeeper) requireBlock(height uint64) (*types.Block, error) {
 			return nil, errors.Wrap(errRequestTimeout, "requireBlock")
 		}
 	}
+}
+
+func (bk *blockKeeper) requireMerkleBlock(height uint64, hash *bc.Hash) (*types.MerkleBlock, error) {
+	var blockHash [32]byte
+	if hash != nil {
+		blockHash = hash.Byte32()
+	}
+	if ok := bk.syncPeer.getMerkleBlock(height, blockHash); !ok {
+		return nil, errPeerDropped
+	}
+
+	waitTicker := time.NewTimer(syncTimeout)
+	for {
+		select {
+		case msg := <-bk.merkleBlockProcessCh:
+			if msg.peerID != bk.syncPeer.ID() {
+				continue
+			}
+			return msg.merkleBlock, nil
+		case <-waitTicker.C:
+			return nil, errors.Wrap(errRequestTimeout, "requireBlocks")
+		}
+	}
+}
+
+func (bk *blockKeeper) VerifyMerkleBlock(header *types.BlockHeader, merkleBlock *types.MerkleBlock) bool {
+	if header.Hash() != merkleBlock.BlockHeader.Hash() {
+		return false
+	}
+
+	return true
 }
 
 func (bk *blockKeeper) requireBlocks(locator []*bc.Hash, stopHash *bc.Hash) ([]*types.Block, error) {

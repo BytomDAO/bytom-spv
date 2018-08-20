@@ -18,6 +18,7 @@ const (
 var (
 	errProtocolHandshakeTimeout = errors.New("Protocol handshake timeout")
 	errStatusRequest            = errors.New("Status request error")
+	errFilterLoadCmd            = errors.New("Filter load error")
 )
 
 //ProtocolReactor handles new coming protocol message.
@@ -72,7 +73,12 @@ func (pr *ProtocolReactor) AddPeer(peer *p2p.Peer) error {
 		select {
 		case <-checkTicker.C:
 			if exist := pr.peers.getPeer(peer.Key); exist != nil {
-				pr.sm.syncTransactions(peer.Key)
+				//pr.sm.syncTransactions(peer.Key)
+				addresses := pr.sm.spvAddress()
+				filterLoadMsg, _ := NewFilterLoadMessage(addresses)
+				if ok := peer.TrySend(BlockchainChannel, struct{ BlockchainMessage }{filterLoadMsg}); !ok {
+					return errStatusRequest
+				}
 				return nil
 			}
 

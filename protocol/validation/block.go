@@ -95,24 +95,24 @@ func ValidateBlock(b *bc.Block, parent *state.BlockNode) error {
 		}
 	}
 
-	if err := checkCoinbaseAmount(b, coinbaseAmount); err != nil {
-		return err
-	}
+	//if err := checkCoinbaseAmount(b, coinbaseAmount); err != nil {
+	//	return err
+	//}
+	//
+	//txMerkleRoot, err := bc.TxMerkleRoot(b.Transactions)
+	//if err != nil {
+	//	return errors.Wrap(err, "computing transaction id merkle root")
+	//}
+	//if txMerkleRoot != *b.TransactionsRoot {
+	//	return errors.WithDetailf(errMismatchedMerkleRoot, "transaction id merkle root")
+	//}
 
-	txMerkleRoot, err := bc.TxMerkleRoot(b.Transactions)
-	if err != nil {
-		return errors.Wrap(err, "computing transaction id merkle root")
-	}
-	if txMerkleRoot != *b.TransactionsRoot {
-		return errors.WithDetailf(errMismatchedMerkleRoot, "transaction id merkle root")
-	}
-
-	txStatusHash, err := bc.TxStatusMerkleRoot(b.TransactionStatus.VerifyStatus)
-	if err != nil {
-		return errors.Wrap(err, "computing transaction status merkle root")
-	}
-	if txStatusHash != *b.TransactionStatusHash {
-		return errors.WithDetailf(errMismatchedMerkleRoot, "transaction status merkle root")
-	}
+	//txStatusHash, err := bc.TxStatusMerkleRoot(b.TransactionStatus.VerifyStatus)
+	//if err != nil {
+	//	return errors.Wrap(err, "computing transaction status merkle root")
+	//}
+	//if txStatusHash != *b.TransactionStatusHash {
+	//	return errors.WithDetailf(errMismatchedMerkleRoot, "transaction status merkle root")
+	//}
 	return nil
 }

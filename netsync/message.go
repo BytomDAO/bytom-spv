@@ -26,6 +26,11 @@ const (
 	StatusResponseByte  = byte(0x21)
 	NewTransactionByte  = byte(0x30)
 	NewMineBlockByte    = byte(0x40)
+	FilterLoadByte      = byte(0x50)
+	FilterClearByte     = byte(0x51)
+	FilterAddByte       = byte(0x52)
+	MerkleRequestByte   = byte(0x60)
+	MerkleResponseByte  = byte(0x61)
 
 	maxBlockchainResponseSize = 22020096 + 2
 )
@@ -45,6 +50,11 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{&StatusResponseMessage{}, StatusResponseByte},
 	wire.ConcreteType{&TransactionMessage{}, NewTransactionByte},
 	wire.ConcreteType{&MineBlockMessage{}, NewMineBlockByte},
+	wire.ConcreteType{&FilterLoadMessage{}, FilterLoadByte},
+	wire.ConcreteType{&FilterClearMessage{}, FilterClearByte},
+	wire.ConcreteType{&FilterAddMessage{}, FilterAddByte},
+	wire.ConcreteType{&GetMerkleBlockMessage{}, MerkleRequestByte},
+	wire.ConcreteType{&MerkleBlockMessage{}, MerkleResponseByte},
 )
 
 //DecodeMessage decode msg
@@ -338,4 +348,66 @@ func (m *MineBlockMessage) GetMineBlock() (*types.Block, error) {
 //String convert msg to string
 func (m *MineBlockMessage) String() string {
 	return fmt.Sprintf("NewMineBlockMessage{Size: %d}", len(m.RawBlock))
+}
+
+//FilterLoadMessage new load addresses msg
+type FilterLoadMessage struct {
+	Addresses [][]byte
+}
+
+//NewMinedBlockMessage construct new mined block msg
+func NewFilterLoadMessage(addresses [][]byte) (*FilterLoadMessage, error) {
+	return &FilterLoadMessage{Addresses: addresses}, nil
+}
+
+//FilterLoadMessage new load addresses msg
+type FilterAddMessage struct {
+	Addresse []byte
+}
+
+//NewMinedBlockMessage construct new mined block msg
+func NewFilterAddMessage(addresse []byte) (*FilterAddMessage, error) {
+	return &FilterAddMessage{Addresse: addresse}, nil
+}
+
+//FilterClearMessage tells the receiving peer to remove a previously-set filter.
+type FilterClearMessage struct{}
+
+//GetMerkleBlockMessage request merkle blocks from remote peers by height/hash
+type GetMerkleBlockMessage struct {
+	Height  uint64
+	RawHash [32]byte
+}
+
+//NewMinedBlockMessage construct new mined block msg
+func NewGetMerkleBlockMessage(height uint64, rawHash [32]byte) *GetMerkleBlockMessage {
+	return &GetMerkleBlockMessage{Height: height, RawHash: rawHash}
+}
+
+//MerkleBlockMessage return the merkle block to client
+type MerkleBlockMessage struct {
+	RawBlockHeader   []byte
+	TransactionCount uint64
+	TxHashes         [][32]byte
+	TxFlags          []byte
+	RawTxDatas       [][]byte
+	StatusHashes     [][32]byte
+	StatusFlags      []byte
+	RawTxStatuses    [][]byte
+}
+
+//GetBlock get block from msg
+func (m *MerkleBlockMessage) GetMerkleBlock() *types.MerkleBlock {
+	merkleBlock := &types.MerkleBlock{
+		BlockHeader:  types.BlockHeader{},
+		Transactions: []*types.Tx{},
+	}
+
+	merkleBlock.BlockHeader.UnmarshalText(m.RawBlockHeader)
+	for _, rawTx := range m.RawTxDatas {
+		tx := &types.Tx{}
+		tx.UnmarshalText(rawTx)
+		merkleBlock.Transactions = append(merkleBlock.Transactions, tx)
+	}
+	return merkleBlock
 }

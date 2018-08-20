@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	"github.com/bytom/account"
 	cfg "github.com/bytom/config"
 	"github.com/bytom/consensus"
 	"github.com/bytom/p2p"
@@ -21,6 +22,8 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/version"
+	"github.com/bytom/wallet"
+	"sync"
 )
 
 const (
@@ -53,15 +56,18 @@ type SyncManager struct {
 	blockKeeper  *blockKeeper
 	peers        *peerSet
 
-	newTxCh    chan *types.Tx
-	newBlockCh chan *bc.Hash
-	txSyncCh   chan *txSyncMsg
-	quitSync   chan struct{}
-	config     *cfg.Config
+	newTxCh      chan *types.Tx
+	newBlockCh   chan *bc.Hash
+	newAddrCh    chan *account.CtrlProgram
+	spvAddresses []*account.CtrlProgram
+	addrMutex    sync.RWMutex
+	txSyncCh     chan *txSyncMsg
+	quitSync     chan struct{}
+	config       *cfg.Config
 }
 
 //NewSyncManager create a sync manager
-func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlockCh chan *bc.Hash) (*SyncManager, error) {
+func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlockCh chan *bc.Hash, wallet *wallet.Wallet) (*SyncManager, error) {
 	genesisHeader, err := chain.GetHeaderByHeight(0)
 	if err != nil {
 		return nil, err
@@ -83,8 +89,9 @@ func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlo
 		txSyncCh:     make(chan *txSyncMsg),
 		quitSync:     make(chan struct{}),
 		config:       config,
+		newAddrCh:    wallet.AccountMgr.NewAddrCh,
 	}
-
+	manager.spvAddresses, _ = wallet.AccountMgr.ListControlProgram()
 	protocolReactor := NewProtocolReactor(manager, manager.peers)
 	manager.sw.AddReactor("PROTOCOL", protocolReactor)
 
@@ -94,7 +101,7 @@ func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlo
 	if !config.VaultMode {
 		p, address := protocolAndAddress(manager.config.P2P.ListenAddress)
 		l, listenerStatus = p2p.NewDefaultListener(p, address, manager.config.P2P.SkipUPNP)
-		manager.sw.AddListener(l)
+		//manager.sw.AddListener(l)
 
 		discv, err := initDiscover(config, &manager.privKey, l.ExternalAddress().Port)
 		if err != nil {
@@ -153,6 +160,10 @@ func (sm *SyncManager) Switch() *p2p.Switch {
 
 func (sm *SyncManager) handleBlockMsg(peer *peer, msg *BlockMessage) {
 	sm.blockKeeper.processBlock(peer.ID(), msg.GetBlock())
+}
+
+func (sm *SyncManager) handleMerkelBlockMsg(peer *peer, msg *MerkleBlockMessage) {
+	sm.blockKeeper.processMerkleBlock(peer.ID(), msg.GetMerkleBlock())
 }
 
 func (sm *SyncManager) handleBlocksMsg(peer *peer, msg *BlocksMessage) {
@@ -284,7 +295,12 @@ func (sm *SyncManager) handleStatusResponseMsg(basePeer BasePeer, msg *StatusRes
 		}).Warn("fail hand shake due to differnt genesis")
 		return
 	}
-
+	if basePeer.ServiceFlag().IsEnable(consensus.SFFullNode) == false {
+		log.WithFields(log.Fields{
+			"peer ServiceFlag": basePeer.ServiceFlag(),
+		}).Warn("fail hand shake due to remote peer is not full node")
+		return
+	}
 	sm.peers.addPeer(basePeer, msg.Height, msg.GetHash())
 }
 
@@ -307,11 +323,11 @@ func (sm *SyncManager) processMsg(basePeer BasePeer, msgType byte, msg Blockchai
 	}
 
 	switch msg := msg.(type) {
-	case *GetBlockMessage:
-		sm.handleGetBlockMsg(peer, msg)
-
-	case *BlockMessage:
-		sm.handleBlockMsg(peer, msg)
+	//case *GetBlockMessage:
+	//	sm.handleGetBlockMsg(peer, msg)
+	//
+	//case *BlockMessage:
+	//	sm.handleBlockMsg(peer, msg)
 
 	case *StatusRequestMessage:
 		sm.handleStatusRequestMsg(basePeer)
@@ -322,20 +338,23 @@ func (sm *SyncManager) processMsg(basePeer BasePeer, msgType byte, msg Blockchai
 	case *TransactionMessage:
 		sm.handleTransactionMsg(peer, msg)
 
-	case *MineBlockMessage:
-		sm.handleMineBlockMsg(peer, msg)
+	//case *MineBlockMessage:
+	//	sm.handleMineBlockMsg(peer, msg)
 
-	case *GetHeadersMessage:
-		sm.handleGetHeadersMsg(peer, msg)
+	//case *GetHeadersMessage:
+	//	sm.handleGetHeadersMsg(peer, msg)
 
 	case *HeadersMessage:
 		sm.handleHeadersMsg(peer, msg)
 
-	case *GetBlocksMessage:
-		sm.handleGetBlocksMsg(peer, msg)
+	//case *GetBlocksMessage:
+	//	sm.handleGetBlocksMsg(peer, msg)
 
-	case *BlocksMessage:
-		sm.handleBlocksMsg(peer, msg)
+	//case *BlocksMessage:
+	//	sm.handleBlocksMsg(peer, msg)
+
+	case *MerkleBlockMessage:
+		sm.handleMerkelBlockMsg(peer, msg)
 
 	default:
 		log.Errorf("unknown message type %v", reflect.TypeOf(msg))
@@ -358,7 +377,7 @@ func (sm *SyncManager) makeNodeInfo(listenerStatus bool) *p2p.NodeInfo {
 		Moniker: sm.config.Moniker,
 		Network: sm.config.ChainID,
 		Version: version.Version,
-		Other:   []string{strconv.FormatUint(uint64(consensus.DefaultServices), 10)},
+		Other:   []string{strconv.FormatUint(uint64(consensus.SFSpvNode), 10)},
 	}
 
 	if !sm.sw.IsListening() {
@@ -383,6 +402,7 @@ func (sm *SyncManager) Start() {
 	if _, err := sm.sw.Start(); err != nil {
 		cmn.Exit(cmn.Fmt("fail on start SyncManager: %v", err))
 	}
+	go sm.spvAddressMgr()
 	// broadcast transactions
 	go sm.txBroadcastLoop()
 	go sm.minedBroadcastLoop()
