@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	syncCycle            = 5 * time.Second
-	blockProcessChSize   = 1024
-	blocksProcessChSize  = 128
-	headersProcessChSize = 1024
+	syncCycle                 = 5 * time.Second
+	blockProcessChSize        = 1024
+	blocksProcessChSize       = 128
+	headersProcessChSize      = 1024
+	merkleBlocksProcessChSize = 128
 )
 
 var (
@@ -67,12 +68,14 @@ type blockKeeper struct {
 
 func newBlockKeeper(chain Chain, peers *peerSet) *blockKeeper {
 	bk := &blockKeeper{
-		chain:            chain,
-		peers:            peers,
-		blockProcessCh:   make(chan *blockMsg, blockProcessChSize),
-		blocksProcessCh:  make(chan *blocksMsg, blocksProcessChSize),
-		headersProcessCh: make(chan *headersMsg, headersProcessChSize),
-		headerList:       list.New(),
+		chain:                chain,
+		peers:                peers,
+		blockProcessCh:       make(chan *blockMsg, blockProcessChSize),
+		blocksProcessCh:      make(chan *blocksMsg, blocksProcessChSize),
+		headersProcessCh:     make(chan *headersMsg, headersProcessChSize),
+		merkleBlockProcessCh: make(chan *merkleBlockMsg, merkleBlocksProcessChSize),
+
+		headerList: list.New(),
 	}
 	bk.resetHeaderState()
 	go bk.syncWorker()
@@ -157,7 +160,7 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 	}
 
 	fastHeader := bk.headerList.Front()
-	for bk.chain.BestBlockHeight() < checkPoint.Height {
+	for bk.chain.BestBlockHeight() <= checkPoint.Height {
 		hash := fastHeader.Value.(*types.BlockHeader).Hash()
 		merkleBlock, err := bk.requireMerkleBlock(fastHeader.Value.(*types.BlockHeader).Height, &hash)
 		if err != nil {
@@ -165,9 +168,9 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 		}
 		bk.VerifyMerkleBlock(fastHeader.Value.(*types.BlockHeader), merkleBlock)
 		blockHash := merkleBlock.Hash()
-		//if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
-		//	return errPeerMisbehave
-		//}
+		if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
+			return errPeerMisbehave
+		}
 		seed, err := bk.chain.CalcNextSeed(&merkleBlock.PreviousBlockHash)
 		if err != nil {
 			return errors.Wrap(err, "fail on fastBlockSync calculate seed")
@@ -178,46 +181,10 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 		if err != nil {
 			return errors.Wrap(err, "fail on fastBlockSync process block")
 		}
+		if fastHeader = fastHeader.Next(); fastHeader == nil {
+			return nil
+		}
 	}
-	//locator := bk.blockLocator()
-	//blocks, err := bk.requireBlocks(locator, &checkPoint.Hash)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//if len(blocks) == 0 {
-	//	return errors.Wrap(errPeerMisbehave, "requireBlocks return empty list")
-	//}
-	//	for ;fastHeader = fastHeader.Next(); fastHeader == nil {
-	//	blocks, err := bk.requireMerkleBlock(fastHeader.Value.(*types.BlockHeader).Height, fastHeader.Value.(*types.BlockHeader).Hash())
-	//	if err != nil {
-	//	return err
-	//}
-
-	//}
-	//for _, block := range blocks {
-	//	if fastHeader = fastHeader.Next(); fastHeader == nil {
-	//		return errors.New("get block than is higher than checkpoint")
-	//	}
-	//
-	//	blockHash := block.Hash()
-	//	if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
-	//		return errPeerMisbehave
-	//	}
-	//
-	//	seed, err := bk.chain.CalcNextSeed(&block.PreviousBlockHash)
-	//	if err != nil {
-	//		return errors.Wrap(err, "fail on fastBlockSync calculate seed")
-	//	}
-	//
-	//	tensority.AIHash.AddCache(&blockHash, seed, &bc.Hash{})
-	//	_, err = bk.chain.ProcessBlock(block)
-	//	tensority.AIHash.RemoveCache(&blockHash, seed)
-	//	if err != nil {
-	//		return errors.Wrap(err, "fail on fastBlockSync process block")
-	//	}
-	//}
-	//}
 	return nil
 }
 

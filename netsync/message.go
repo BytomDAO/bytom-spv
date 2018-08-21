@@ -27,8 +27,8 @@ const (
 	NewTransactionByte  = byte(0x30)
 	NewMineBlockByte    = byte(0x40)
 	FilterLoadByte      = byte(0x50)
-	FilterClearByte     = byte(0x51)
-	FilterAddByte       = byte(0x52)
+	FilterAddByte       = byte(0x51)
+	FilterClearByte     = byte(0x52)
 	MerkleRequestByte   = byte(0x60)
 	MerkleResponseByte  = byte(0x61)
 
@@ -51,8 +51,8 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{&TransactionMessage{}, NewTransactionByte},
 	wire.ConcreteType{&MineBlockMessage{}, NewMineBlockByte},
 	wire.ConcreteType{&FilterLoadMessage{}, FilterLoadByte},
-	wire.ConcreteType{&FilterClearMessage{}, FilterClearByte},
 	wire.ConcreteType{&FilterAddMessage{}, FilterAddByte},
+	wire.ConcreteType{&FilterClearMessage{}, FilterClearByte},
 	wire.ConcreteType{&GetMerkleBlockMessage{}, MerkleRequestByte},
 	wire.ConcreteType{&MerkleBlockMessage{}, MerkleResponseByte},
 )
@@ -362,12 +362,12 @@ func NewFilterLoadMessage(addresses [][]byte) (*FilterLoadMessage, error) {
 
 //FilterLoadMessage new load addresses msg
 type FilterAddMessage struct {
-	Addresse []byte
+	Address []byte
 }
 
 //NewMinedBlockMessage construct new mined block msg
 func NewFilterAddMessage(addresse []byte) (*FilterAddMessage, error) {
-	return &FilterAddMessage{Addresse: addresse}, nil
+	return &FilterAddMessage{Address: addresse}, nil
 }
 
 //FilterClearMessage tells the receiving peer to remove a previously-set filter.
