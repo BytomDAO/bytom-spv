@@ -9,13 +9,13 @@ const (
 	SFFullNode ServiceFlag = 1 << iota
 	// SFFastSync indicate peer support header first mode
 	SFFastSync
-	SFSpvNode
+	//SFSpvProof indicate peer support spv proof
+	SFSpvProof
 	// DefaultServices is the server that this node support
-	DefaultServices = SFFullNode | SFFastSync
+	DefaultServices = SFFastSync
 )
 
 // IsEnable check does the flag support the input flag function
 func (f ServiceFlag) IsEnable(checkFlag ServiceFlag) bool {
 	return f&checkFlag == checkFlag
 }
-

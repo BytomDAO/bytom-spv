@@ -295,10 +295,10 @@ func (sm *SyncManager) handleStatusResponseMsg(basePeer BasePeer, msg *StatusRes
 		}).Warn("fail hand shake due to differnt genesis")
 		return
 	}
-	if basePeer.ServiceFlag().IsEnable(consensus.SFFullNode) == false {
+	if basePeer.ServiceFlag().IsEnable(consensus.SFFullNode|consensus.SFSpvProof) == false {
 		log.WithFields(log.Fields{
 			"peer ServiceFlag": basePeer.ServiceFlag(),
-		}).Warn("fail hand shake due to remote peer is not full node")
+		}).Warn("fail hand shake due to remote peer is not full node support spv proof")
 		return
 	}
 	sm.peers.addPeer(basePeer, msg.Height, msg.GetHash())
@@ -377,7 +377,7 @@ func (sm *SyncManager) makeNodeInfo(listenerStatus bool) *p2p.NodeInfo {
 		Moniker: sm.config.Moniker,
 		Network: sm.config.ChainID,
 		Version: version.Version,
-		Other:   []string{strconv.FormatUint(uint64(consensus.SFSpvNode), 10)},
+		Other:   []string{strconv.FormatUint(uint64(consensus.DefaultServices), 10)},
 	}
 
 	if !sm.sw.IsListening() {
