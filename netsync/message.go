@@ -384,16 +384,13 @@ func NewGetMerkleBlockMessage(height uint64, rawHash [32]byte) *GetMerkleBlockMe
 	return &GetMerkleBlockMessage{Height: height, RawHash: rawHash}
 }
 
-//MerkleBlockMessage return the merkle block to client
 type MerkleBlockMessage struct {
-	RawBlockHeader   []byte
-	TransactionCount uint64
-	TxHashes         [][32]byte
-	TxFlags          []byte
-	RawTxDatas       [][]byte
-	StatusHashes     [][32]byte
-	StatusFlags      []byte
-	RawTxStatuses    [][]byte
+	RawBlockHeader []byte
+	TxHashes       [][32]byte
+	RawTxDatas     [][]byte
+	StatusHashes   [][32]byte
+	RawTxStatuses  [][]byte
+	Flags          []byte
 }
 
 //GetBlock get block from msg
