@@ -37,9 +37,9 @@ func (view *UtxoViewpoint) ApplyTransaction(block *bc.Block, tx *bc.Tx, statusFa
 		if entry.Spent {
 			return errors.New("utxo has been spent")
 		}
-		if entry.IsCoinBase && entry.BlockHeight+consensus.CoinbasePendingBlockNumber > block.Height {
-			return errors.New("coinbase utxo is not ready for use")
-		}
+		//if entry.IsCoinBase && entry.BlockHeight+consensus.CoinbasePendingBlockNumber > block.Height {
+		//	return errors.New("coinbase utxo is not ready for use")
+		//}
 		entry.SpendOutput()
 	}
 
