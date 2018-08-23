@@ -22,7 +22,11 @@ const (
 // it contains.
 type MerkleBlock struct {
 	BlockHeader
-	Transactions []*Tx
+	Transactions  []*Tx
+	TxHashes      [][32]byte
+	StatusHashes  [][32]byte
+	RawTxStatuses [][]byte
+	Flags         []byte
 }
 
 // MarshalText fulfills the json.Marshaler interface. This guarantees that

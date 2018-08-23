@@ -166,7 +166,12 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 		if err != nil {
 			return err
 		}
-		bk.VerifyMerkleBlock(fastHeader.Value.(*types.BlockHeader), merkleBlock)
+		if err := bk.VerifyBlockHeader(fastHeader.Value.(*types.BlockHeader), merkleBlock); err != nil {
+			return err
+		}
+		if err := bk.VerifyMerkleBlock(merkleBlock); err != nil {
+			return err
+		}
 		blockHash := merkleBlock.Hash()
 		if blockHash != fastHeader.Value.(*types.BlockHeader).Hash() {
 			return errPeerMisbehave
@@ -283,12 +288,14 @@ func (bk *blockKeeper) processHeaders(peerID string, headers []*types.BlockHeade
 func (bk *blockKeeper) regularBlockSync(wantHeight uint64) error {
 	i := bk.chain.BestBlockHeight() + 1
 	for i <= wantHeight {
-		block, err := bk.requireMerkleBlock(i, nil)
+		merkleBlock, err := bk.requireMerkleBlock(i, nil)
 		if err != nil {
 			return err
 		}
-
-		isOrphan, err := bk.ProcessMerkleBlock(block)
+		if err := bk.VerifyMerkleBlock(merkleBlock); err != nil {
+			return err
+		}
+		isOrphan, err := bk.ProcessMerkleBlock(merkleBlock)
 		if err != nil {
 			return err
 		}
@@ -347,12 +354,35 @@ func (bk *blockKeeper) requireMerkleBlock(height uint64, hash *bc.Hash) (*types.
 	}
 }
 
-func (bk *blockKeeper) VerifyMerkleBlock(header *types.BlockHeader, merkleBlock *types.MerkleBlock) bool {
+func (bk *blockKeeper) VerifyBlockHeader(header *types.BlockHeader, merkleBlock *types.MerkleBlock) error {
 	if header.Hash() != merkleBlock.BlockHeader.Hash() {
-		return false
+		return errors.New("BlockHeader mismatch")
+	}
+	return nil
+}
+
+func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
+	if len(merkleBlock.Transactions) == 0 {
+		return nil
 	}
 
-	return true
+	var proofHashes []*bc.Hash
+	for _, v := range merkleBlock.TxHashes {
+		hash := bc.NewHash(v)
+		proofHashes = append(proofHashes, &hash)
+	}
+
+	flags := merkleBlock.Flags
+
+	var relatedTxHashes []*bc.Hash
+	for _, v := range merkleBlock.Transactions {
+		relatedTxHashes = append(relatedTxHashes, &v.ID)
+	}
+	if !types.ValidateTxMerkleTreeProof(proofHashes, flags, relatedTxHashes, merkleBlock.BlockHeader.TransactionsMerkleRoot) {
+		return errors.New("merkle proof check error")
+	}
+
+	return nil
 }
 
 func (bk *blockKeeper) requireBlocks(locator []*bc.Hash, stopHash *bc.Hash) ([]*types.Block, error) {

@@ -399,12 +399,18 @@ func (m *MerkleBlockMessage) GetMerkleBlock() *types.MerkleBlock {
 		BlockHeader:  types.BlockHeader{},
 		Transactions: []*types.Tx{},
 	}
-
 	merkleBlock.BlockHeader.UnmarshalText(m.RawBlockHeader)
+
 	for _, rawTx := range m.RawTxDatas {
 		tx := &types.Tx{}
 		tx.UnmarshalText(rawTx)
 		merkleBlock.Transactions = append(merkleBlock.Transactions, tx)
 	}
+
+	merkleBlock.TxHashes = m.TxHashes
+	merkleBlock.Flags = m.Flags
+	merkleBlock.StatusHashes = m.StatusHashes
+	merkleBlock.RawTxStatuses = m.RawTxStatuses
+
 	return merkleBlock
 }

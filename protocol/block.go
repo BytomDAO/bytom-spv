@@ -75,18 +75,7 @@ func (c *Chain) calcReorganizeNodes(node *state.BlockNode) ([]*state.BlockNode, 
 
 func (c *Chain) connectBlock(block *types.Block) (err error) {
 	bcBlock := types.MapBlock(block)
-	if bcBlock.TransactionStatus, err = c.store.GetTransactionStatus(&bcBlock.ID); err != nil {
-		return err
-	}
-
 	utxoView := state.NewUtxoViewpoint()
-	if err := c.store.GetTransactionsUtxo(utxoView, bcBlock.Transactions); err != nil {
-		return err
-	}
-	if err := utxoView.ApplyBlock(bcBlock, bcBlock.TransactionStatus); err != nil {
-		return err
-	}
-
 	node := c.index.GetNode(&bcBlock.ID)
 	if err := c.setState(node, utxoView); err != nil {
 		return err
@@ -99,51 +88,7 @@ func (c *Chain) connectBlock(block *types.Block) (err error) {
 }
 
 func (c *Chain) reorganizeChain(node *state.BlockNode) error {
-	attachNodes, detachNodes := c.calcReorganizeNodes(node)
 	utxoView := state.NewUtxoViewpoint()
-
-	for _, detachNode := range detachNodes {
-		b, err := c.store.GetBlock(&detachNode.Hash)
-		if err != nil {
-			return err
-		}
-
-		detachBlock := types.MapBlock(b)
-		if err := c.store.GetTransactionsUtxo(utxoView, detachBlock.Transactions); err != nil {
-			return err
-		}
-		txStatus, err := c.GetTransactionStatus(&detachBlock.ID)
-		if err != nil {
-			return err
-		}
-		if err := utxoView.DetachBlock(detachBlock, txStatus); err != nil {
-			return err
-		}
-
-		log.WithFields(log.Fields{"height": node.Height, "hash": node.Hash.String()}).Debug("detach from mainchain")
-	}
-
-	for _, attachNode := range attachNodes {
-		b, err := c.store.GetBlock(&attachNode.Hash)
-		if err != nil {
-			return err
-		}
-
-		attachBlock := types.MapBlock(b)
-		if err := c.store.GetTransactionsUtxo(utxoView, attachBlock.Transactions); err != nil {
-			return err
-		}
-		txStatus, err := c.GetTransactionStatus(&attachBlock.ID)
-		if err != nil {
-			return err
-		}
-		if err := utxoView.ApplyBlock(attachBlock, txStatus); err != nil {
-			return err
-		}
-
-		log.WithFields(log.Fields{"height": node.Height, "hash": node.Hash.String()}).Debug("attach from mainchain")
-	}
-
 	return c.setState(node, utxoView)
 }
 
