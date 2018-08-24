@@ -140,7 +140,8 @@ type submitTxResp struct {
 func (a *API) submit(ctx context.Context, ins struct {
 	Tx types.Tx `json:"raw_transaction"`
 }) Response {
-	if err := txbuilder.FinalizeTx(ctx, a.chain, &ins.Tx); err != nil {
+	txCh := a.sync.GetNewTxCh()
+	if err := txbuilder.FinalizeTx(ctx, txCh, &ins.Tx); err != nil {
 		return NewErrorResponse(err)
 	}
 

@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/bytom/errors"
-	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/vm"
 )
@@ -22,7 +21,7 @@ var (
 // FinalizeTx validates a transaction signature template,
 // assembles a fully signed tx, and stores the effects of
 // its changes on the UTXO set.
-func FinalizeTx(ctx context.Context, c *protocol.Chain, tx *types.Tx) error {
+func FinalizeTx(ctx context.Context, txCh chan *types.Tx,tx *types.Tx) error {
 	if err := checkTxSighashCommitment(tx); err != nil {
 		return err
 	}
@@ -35,13 +34,7 @@ func FinalizeTx(ctx context.Context, c *protocol.Chain, tx *types.Tx) error {
 	tx.TxData.SerializedSize = uint64(len(data))
 	tx.Tx.SerializedSize = uint64(len(data))
 
-	_, err = c.ValidateTx(tx)
-	if errors.Root(err) == protocol.ErrBadTx {
-		return errors.Sub(ErrRejected, err)
-	}
-	if err != nil {
-		return errors.WithDetail(err, "tx rejected: "+err.Error())
-	}
+	txCh <- tx
 
 	return errors.Wrap(err)
 }
