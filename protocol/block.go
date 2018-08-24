@@ -81,9 +81,6 @@ func (c *Chain) connectBlock(block *types.Block) (err error) {
 		return err
 	}
 
-	for _, tx := range block.Transactions {
-		c.txPool.RemoveTransaction(&tx.Tx.ID)
-	}
 	return nil
 }
 
