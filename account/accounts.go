@@ -434,9 +434,7 @@ func (m *Manager) createAddress(account *Account, change bool) (cp *CtrlProgram,
 	if err = m.insertControlPrograms(cp); err != nil {
 		return nil, err
 	}
-	if !change {
-		m.NewAddrCh <- cp
-	}
+	m.NewAddrCh <- cp
 	return cp, nil
 }
 
