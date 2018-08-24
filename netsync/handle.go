@@ -52,7 +52,6 @@ type SyncManager struct {
 	privKey      crypto.PrivKeyEd25519 // local node's p2p key
 	chain        Chain
 	txPool       *core.TxPool
-	blockFetcher *blockFetcher
 	blockKeeper  *blockKeeper
 	peers        *peerSet
 
@@ -81,7 +80,6 @@ func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlo
 		txPool:       txPool,
 		chain:        chain,
 		privKey:      crypto.GenPrivKeyEd25519(),
-		blockFetcher: newBlockFetcher(chain, peers),
 		blockKeeper:  newBlockKeeper(chain, peers),
 		peers:        peers,
 		newTxCh:      make(chan *types.Tx, maxTxChanSize),
@@ -253,19 +251,6 @@ func (sm *SyncManager) handleHeadersMsg(peer *peer, msg *HeadersMessage) {
 	}
 
 	sm.blockKeeper.processHeaders(peer.ID(), headers)
-}
-
-func (sm *SyncManager) handleMineBlockMsg(peer *peer, msg *MineBlockMessage) {
-	block, err := msg.GetMineBlock()
-	if err != nil {
-		log.WithField("err", err).Warning("fail on handleMineBlockMsg GetMineBlock")
-		return
-	}
-
-	hash := block.Hash()
-	peer.markBlock(&hash)
-	sm.blockFetcher.processNewBlock(&blockMsg{peerID: peer.ID(), block: block})
-	peer.setStatus(block.Height, &hash)
 }
 
 func (sm *SyncManager) handleStatusRequestMsg(peer BasePeer) {
