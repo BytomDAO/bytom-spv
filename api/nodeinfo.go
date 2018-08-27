@@ -27,7 +27,6 @@ func (a *API) GetNodeInfo() *NetInfo {
 	info := &NetInfo{
 		Listening:    a.sync.Switch().IsListening(),
 		Syncing:      !a.sync.IsCaughtUp(),
-		Mining:       a.cpuMiner.IsMining(),
 		PeerCount:    len(a.sync.Switch().Peers().List()),
 		CurrentBlock: a.chain.BestBlockHeight(),
 		NetWorkID:    a.sync.NodeInfo().Network,
@@ -81,17 +80,6 @@ func (a *API) connectPeerByIpAndPort(ip string, port uint16) (*netsync.PeerInfo,
 // getNetInfo return network information
 func (a *API) getNetInfo() Response {
 	return NewSuccessResponse(a.GetNodeInfo())
-}
-
-// isMining return is in mining or not
-func (a *API) isMining() Response {
-	IsMining := map[string]bool{"is_mining": a.IsMining()}
-	return NewSuccessResponse(IsMining)
-}
-
-// IsMining return mining status
-func (a *API) IsMining() bool {
-	return a.cpuMiner.IsMining()
 }
 
 // return the peers of current node
