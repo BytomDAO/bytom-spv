@@ -11,7 +11,6 @@ import (
 	"github.com/bytom/account"
 	"github.com/bytom/blockchain/query"
 	"github.com/bytom/crypto/sha3pool"
-	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc/types"
 )
 
@@ -34,14 +33,10 @@ func (a SortByTimestamp) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a SortByTimestamp) Less(i, j int) bool { return a[i].Timestamp > a[j].Timestamp }
 
 // AddUnconfirmedTx handle wallet status update when tx add into txpool
-func (w *Wallet) AddUnconfirmedTx(txD *protocol.TxDesc) {
-	if err := w.saveUnconfirmedTx(txD.Tx); err != nil {
+func (w *Wallet) AddUnconfirmedTx(tx *types.Tx) {
+	if err := w.saveUnconfirmedTx(tx); err != nil {
 		log.WithField("err", err).Error("wallet fail on saveUnconfirmedTx")
 	}
-
-	utxos := txOutToUtxos(txD.Tx, txD.StatusFail, 0)
-	utxos = w.filterAccountUtxo(utxos)
-	w.AccountMgr.AddUnconfirmedUtxo(utxos)
 }
 
 // GetUnconfirmedTxs get account unconfirmed transactions, filter transactions by accountID when accountID is not empty
@@ -83,8 +78,8 @@ func (w *Wallet) GetUnconfirmedTxByTxID(txID string) (*query.AnnotatedTx, error)
 }
 
 // RemoveUnconfirmedTx handle wallet status update when tx removed from txpool
-func (w *Wallet) RemoveUnconfirmedTx(txD *protocol.TxDesc) {
-	w.AccountMgr.RemoveUnconfirmedUtxo(txD.Tx.ResultIds)
+func (w *Wallet) RemoveUnconfirmedTx(tx *types.Tx) {
+	w.AccountMgr.RemoveUnconfirmedUtxo(tx.ResultIds)
 }
 
 func (w *Wallet) buildAnnotatedUnconfirmedTx(tx *types.Tx) *query.AnnotatedTx {
@@ -174,5 +169,13 @@ func (w *Wallet) delUnconfirmedTx() {
 		if err := w.delExpiredTxs(); err != nil {
 			log.WithField("err", err).Error("wallet fail on delUnconfirmedTx")
 		}
+	}
+}
+
+// newTxListener listener transaction from txPool, and send it to syncManager and wallet
+func (w *Wallet) newTxListener() {
+	for {
+		tx := <-w.newTxCh
+		w.AddUnconfirmedTx(tx)
 	}
 }

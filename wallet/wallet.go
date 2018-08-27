@@ -18,6 +18,8 @@ import (
 const (
 	//SINGLE single sign
 	SINGLE = 1
+	//channel size for notifying tx msg
+	NewTxChSize = 1024
 )
 
 var walletKey = []byte("walletInfo")
@@ -40,6 +42,7 @@ type Wallet struct {
 	Hsm        *pseudohsm.HSM
 	chain      *protocol.Chain
 	rescanCh   chan struct{}
+	newTxCh    chan *types.Tx
 }
 
 //NewWallet return a new wallet instance
@@ -51,6 +54,7 @@ func NewWallet(walletDB db.DB, account *account.Manager, asset *asset.Registry, 
 		chain:      chain,
 		Hsm:        hsm,
 		rescanCh:   make(chan struct{}, 1),
+		newTxCh:    make(chan *types.Tx, NewTxChSize),
 	}
 
 	if err := w.loadWalletInfo(); err != nil {
@@ -58,6 +62,7 @@ func NewWallet(walletDB db.DB, account *account.Manager, asset *asset.Registry, 
 	}
 
 	go w.walletUpdater()
+	go w.newTxListener()
 	go w.delUnconfirmedTx()
 	return w, nil
 }
@@ -211,4 +216,8 @@ func (w *Wallet) GetWalletStatusInfo() StatusInfo {
 	defer w.rw.RUnlock()
 
 	return w.status
+}
+
+func (w *Wallet) GetTxCh() chan *types.Tx {
+	return w.newTxCh
 }

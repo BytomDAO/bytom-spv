@@ -18,7 +18,6 @@ import (
 	"github.com/bytom/consensus"
 	"github.com/bytom/p2p"
 	"github.com/bytom/p2p/discover"
-	core "github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/version"
@@ -41,7 +40,6 @@ type Chain interface {
 	GetHeaderByHeight(uint64) (*types.BlockHeader, error)
 	InMainChain(bc.Hash) bool
 	ProcessBlock(*types.Block) (bool, error)
-	ValidateTx(*types.Tx) (bool, error)
 }
 
 //SyncManager Sync Manager is responsible for the business layer information synchronization
@@ -49,13 +47,13 @@ type SyncManager struct {
 	sw          *p2p.Switch
 	genesisHash bc.Hash
 
-	privKey      crypto.PrivKeyEd25519 // local node's p2p key
-	chain        Chain
-	txPool       *core.TxPool
-	blockKeeper  *blockKeeper
-	peers        *peerSet
+	privKey     crypto.PrivKeyEd25519 // local node's p2p key
+	chain       Chain
+	blockKeeper *blockKeeper
+	peers       *peerSet
 
 	newTxCh      chan *types.Tx
+	txNotifyCh   chan *types.Tx
 	newBlockCh   chan *bc.Hash
 	newAddrCh    chan *account.CtrlProgram
 	spvAddresses []*account.CtrlProgram
@@ -66,7 +64,7 @@ type SyncManager struct {
 }
 
 //NewSyncManager create a sync manager
-func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlockCh chan *bc.Hash, wallet *wallet.Wallet) (*SyncManager, error) {
+func NewSyncManager(config *cfg.Config, chain Chain, newBlockCh chan *bc.Hash, wallet *wallet.Wallet) (*SyncManager, error) {
 	genesisHeader, err := chain.GetHeaderByHeight(0)
 	if err != nil {
 		return nil, err
@@ -75,19 +73,19 @@ func NewSyncManager(config *cfg.Config, chain Chain, txPool *core.TxPool, newBlo
 	sw := p2p.NewSwitch(config)
 	peers := newPeerSet(sw)
 	manager := &SyncManager{
-		sw:           sw,
-		genesisHash:  genesisHeader.Hash(),
-		txPool:       txPool,
-		chain:        chain,
-		privKey:      crypto.GenPrivKeyEd25519(),
-		blockKeeper:  newBlockKeeper(chain, peers),
-		peers:        peers,
-		newTxCh:      make(chan *types.Tx, maxTxChanSize),
-		newBlockCh:   newBlockCh,
-		txSyncCh:     make(chan *txSyncMsg),
-		quitSync:     make(chan struct{}),
-		config:       config,
-		newAddrCh:    wallet.AccountMgr.NewAddrCh,
+		sw:          sw,
+		genesisHash: genesisHeader.Hash(),
+		chain:       chain,
+		privKey:     crypto.GenPrivKeyEd25519(),
+		blockKeeper: newBlockKeeper(chain, peers),
+		peers:       peers,
+		newTxCh:     make(chan *types.Tx, maxTxChanSize),
+		txNotifyCh:  wallet.GetTxCh(),
+		newBlockCh:  newBlockCh,
+		txSyncCh:    make(chan *txSyncMsg),
+		quitSync:    make(chan struct{}),
+		config:      config,
+		newAddrCh:   wallet.AccountMgr.NewAddrCh,
 	}
 	manager.spvAddresses, _ = wallet.AccountMgr.ListControlProgram()
 	protocolReactor := NewProtocolReactor(manager, manager.peers)
@@ -295,10 +293,7 @@ func (sm *SyncManager) handleTransactionMsg(peer *peer, msg *TransactionMessage)
 		sm.peers.addBanScore(peer.ID(), 0, 10, "fail on get tx from message")
 		return
 	}
-
-	if isOrphan, err := sm.chain.ValidateTx(tx); err != nil && isOrphan == false {
-		sm.peers.addBanScore(peer.ID(), 10, 0, "fail on validate tx transaction")
-	}
+	sm.txNotifyCh <- tx
 }
 
 func (sm *SyncManager) processMsg(basePeer BasePeer, msgType byte, msg BlockchainMessage) {
@@ -308,12 +303,6 @@ func (sm *SyncManager) processMsg(basePeer BasePeer, msgType byte, msg Blockchai
 	}
 
 	switch msg := msg.(type) {
-	//case *GetBlockMessage:
-	//	sm.handleGetBlockMsg(peer, msg)
-	//
-	//case *BlockMessage:
-	//	sm.handleBlockMsg(peer, msg)
-
 	case *StatusRequestMessage:
 		sm.handleStatusRequestMsg(basePeer)
 
@@ -323,20 +312,8 @@ func (sm *SyncManager) processMsg(basePeer BasePeer, msgType byte, msg Blockchai
 	case *TransactionMessage:
 		sm.handleTransactionMsg(peer, msg)
 
-	//case *MineBlockMessage:
-	//	sm.handleMineBlockMsg(peer, msg)
-
-	//case *GetHeadersMessage:
-	//	sm.handleGetHeadersMsg(peer, msg)
-
 	case *HeadersMessage:
 		sm.handleHeadersMsg(peer, msg)
-
-	//case *GetBlocksMessage:
-	//	sm.handleGetBlocksMsg(peer, msg)
-
-	//case *BlocksMessage:
-	//	sm.handleBlocksMsg(peer, msg)
 
 	case *MerkleBlockMessage:
 		sm.handleMerkelBlockMsg(peer, msg)

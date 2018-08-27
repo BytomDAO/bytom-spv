@@ -22,7 +22,6 @@ var ErrTheDistantFuture = errors.New("block height too far in future")
 type Chain struct {
 	index          *state.BlockIndex
 	orphanManage   *OrphanManage
-	txPool         *TxPool
 	store          Store
 	processBlockCh chan *processBlockMsg
 
@@ -31,10 +30,9 @@ type Chain struct {
 }
 
 // NewChain returns a new Chain using store as the underlying storage.
-func NewChain(store Store, txPool *TxPool) (*Chain, error) {
+func NewChain(store Store) (*Chain, error) {
 	c := &Chain{
 		orphanManage:   NewOrphanManage(),
-		txPool:         txPool,
 		store:          store,
 		processBlockCh: make(chan *processBlockMsg, maxProcessBlockChSize),
 	}
@@ -158,7 +156,3 @@ func (c *Chain) BlockWaiter(height uint64) <-chan struct{} {
 	return ch
 }
 
-// GetTxPool return chain txpool.
-func (c *Chain) GetTxPool() *TxPool {
-	return c.txPool
-}

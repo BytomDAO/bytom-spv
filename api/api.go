@@ -17,8 +17,6 @@ import (
 	"github.com/bytom/dashboard"
 	"github.com/bytom/equity"
 	"github.com/bytom/errors"
-	"github.com/bytom/mining/cpuminer"
-	"github.com/bytom/mining/miningpool"
 	"github.com/bytom/net/http/authn"
 	"github.com/bytom/net/http/gzip"
 	"github.com/bytom/net/http/httpjson"
@@ -111,8 +109,6 @@ type API struct {
 	server        *http.Server
 	handler       http.Handler
 	txFeedTracker *txfeed.Tracker
-	cpuMiner      *cpuminer.CPUMiner
-	miningPool    *miningpool.MiningPool
 }
 
 func (a *API) initServer(config *cfg.Config) {
@@ -169,15 +165,13 @@ func (a *API) StartServer(address string) {
 }
 
 // NewAPI create and initialize the API
-func NewAPI(sync *netsync.SyncManager, wallet *wallet.Wallet, txfeeds *txfeed.Tracker, cpuMiner *cpuminer.CPUMiner, miningPool *miningpool.MiningPool, chain *protocol.Chain, config *cfg.Config, token *accesstoken.CredentialStore) *API {
+func NewAPI(sync *netsync.SyncManager, wallet *wallet.Wallet, txfeeds *txfeed.Tracker, chain *protocol.Chain, config *cfg.Config, token *accesstoken.CredentialStore) *API {
 	api := &API{
 		sync:          sync,
 		wallet:        wallet,
 		chain:         chain,
 		accessTokens:  token,
 		txFeedTracker: txfeeds,
-		cpuMiner:      cpuMiner,
-		miningPool:    miningPool,
 	}
 	api.buildHandler()
 	api.initServer(config)
@@ -207,9 +201,6 @@ func (a *API) buildHandler() {
 
 		m.Handle("/get-mining-address", jsonHandler(a.getMiningAddress))
 		m.Handle("/set-mining-address", jsonHandler(a.setMiningAddress))
-
-		m.Handle("/get-coinbase-arbitrary", jsonHandler(a.getCoinbaseArbitrary))
-		m.Handle("/set-coinbase-arbitrary", jsonHandler(a.setCoinbaseArbitrary))
 
 		m.Handle("/create-asset", jsonHandler(a.createAsset))
 		m.Handle("/update-asset-alias", jsonHandler(a.updateAssetAlias))
@@ -257,8 +248,8 @@ func (a *API) buildHandler() {
 	m.Handle("/submit-transaction", jsonHandler(a.submit))
 	m.Handle("/estimate-transaction-gas", jsonHandler(a.estimateTxGas))
 
-	m.Handle("/get-unconfirmed-transaction", jsonHandler(a.getUnconfirmedTx))
-	m.Handle("/list-unconfirmed-transactions", jsonHandler(a.listUnconfirmedTxs))
+	//m.Handle("/get-unconfirmed-transaction", jsonHandler(a.getUnconfirmedTx))
+	//m.Handle("/list-unconfirmed-transactions", jsonHandler(a.listUnconfirmedTxs))
 	m.Handle("/decode-raw-transaction", jsonHandler(a.decodeRawTransaction))
 
 	m.Handle("/get-block", jsonHandler(a.getBlock))
@@ -267,14 +258,6 @@ func (a *API) buildHandler() {
 	m.Handle("/get-block-count", jsonHandler(a.getBlockCount))
 	m.Handle("/get-difficulty", jsonHandler(a.getDifficulty))
 	m.Handle("/get-hash-rate", jsonHandler(a.getHashRate))
-
-	m.Handle("/is-mining", jsonHandler(a.isMining))
-	m.Handle("/set-mining", jsonHandler(a.setMining))
-
-	m.Handle("/get-work", jsonHandler(a.getWork))
-	m.Handle("/get-work-json", jsonHandler(a.getWorkJSON))
-	m.Handle("/submit-work", jsonHandler(a.submitWork))
-	m.Handle("/submit-work-json", jsonHandler(a.submitWorkJSON))
 
 	m.Handle("/verify-message", jsonHandler(a.verifyMessage))
 	m.Handle("/decode-program", jsonHandler(a.decodeProgram))

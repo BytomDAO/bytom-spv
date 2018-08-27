@@ -147,38 +147,38 @@ func (a *API) listTransactions(ctx context.Context, filter struct {
 }
 
 // POST /get-unconfirmed-transaction
-func (a *API) getUnconfirmedTx(ctx context.Context, filter struct {
-	TxID chainjson.HexBytes `json:"tx_id"`
-}) Response {
-	var tmpTxID [32]byte
-	copy(tmpTxID[:], filter.TxID[:])
-
-	txHash := bc.NewHash(tmpTxID)
-	txPool := a.chain.GetTxPool()
-	txDesc, err := txPool.GetTransaction(&txHash)
-	if err != nil {
-		return NewErrorResponse(err)
-	}
-
-	tx := &BlockTx{
-		ID:         txDesc.Tx.ID,
-		Version:    txDesc.Tx.Version,
-		Size:       txDesc.Tx.SerializedSize,
-		TimeRange:  txDesc.Tx.TimeRange,
-		Inputs:     []*query.AnnotatedInput{},
-		Outputs:    []*query.AnnotatedOutput{},
-		StatusFail: false,
-	}
-
-	for i := range txDesc.Tx.Inputs {
-		tx.Inputs = append(tx.Inputs, a.wallet.BuildAnnotatedInput(txDesc.Tx, uint32(i)))
-	}
-	for i := range txDesc.Tx.Outputs {
-		tx.Outputs = append(tx.Outputs, a.wallet.BuildAnnotatedOutput(txDesc.Tx, i))
-	}
-
-	return NewSuccessResponse(tx)
-}
+//func (a *API) getUnconfirmedTx(ctx context.Context, filter struct {
+//	TxID chainjson.HexBytes `json:"tx_id"`
+//}) Response {
+//	var tmpTxID [32]byte
+//	copy(tmpTxID[:], filter.TxID[:])
+//
+//	txHash := bc.NewHash(tmpTxID)
+//	txPool := a.chain.GetTxPool()
+//	txDesc, err := txPool.GetTransaction(&txHash)
+//	if err != nil {
+//		return NewErrorResponse(err)
+//	}
+//
+//	tx := &BlockTx{
+//		ID:         txDesc.Tx.ID,
+//		Version:    txDesc.Tx.Version,
+//		Size:       txDesc.Tx.SerializedSize,
+//		TimeRange:  txDesc.Tx.TimeRange,
+//		Inputs:     []*query.AnnotatedInput{},
+//		Outputs:    []*query.AnnotatedOutput{},
+//		StatusFail: false,
+//	}
+//
+//	for i := range txDesc.Tx.Inputs {
+//		tx.Inputs = append(tx.Inputs, a.wallet.BuildAnnotatedInput(txDesc.Tx, uint32(i)))
+//	}
+//	for i := range txDesc.Tx.Outputs {
+//		tx.Outputs = append(tx.Outputs, a.wallet.BuildAnnotatedOutput(txDesc.Tx, i))
+//	}
+//
+//	return NewSuccessResponse(tx)
+//}
 
 type unconfirmedTxsResp struct {
 	Total uint64    `json:"total"`
@@ -186,20 +186,20 @@ type unconfirmedTxsResp struct {
 }
 
 // POST /list-unconfirmed-transactions
-func (a *API) listUnconfirmedTxs(ctx context.Context) Response {
-	txIDs := []bc.Hash{}
-
-	txPool := a.chain.GetTxPool()
-	txs := txPool.GetTransactions()
-	for _, txDesc := range txs {
-		txIDs = append(txIDs, bc.Hash(txDesc.Tx.ID))
-	}
-
-	return NewSuccessResponse(&unconfirmedTxsResp{
-		Total: uint64(len(txIDs)),
-		TxIDs: txIDs,
-	})
-}
+//func (a *API) listUnconfirmedTxs(ctx context.Context) Response {
+//	txIDs := []bc.Hash{}
+//
+//	txPool := a.chain.GetTxPool()
+//	txs := txPool.GetTransactions()
+//	for _, txDesc := range txs {
+//		txIDs = append(txIDs, bc.Hash(txDesc.Tx.ID))
+//	}
+//
+//	return NewSuccessResponse(&unconfirmedTxsResp{
+//		Total: uint64(len(txIDs)),
+//		TxIDs: txIDs,
+//	})
+//}
 
 // RawTx is the tx struct for getRawTransaction
 type RawTx struct {

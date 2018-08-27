@@ -19,23 +19,11 @@ type txSyncMsg struct {
 	txs    []*types.Tx
 }
 
-func (sm *SyncManager) syncTransactions(peerID string) {
-	pending := sm.txPool.GetTransactions()
-	if len(pending) == 0 {
-		return
-	}
-
-	txs := make([]*types.Tx, len(pending))
-	for i, batch := range pending {
-		txs[i] = batch.Tx
-	}
-	sm.txSyncCh <- &txSyncMsg{peerID, txs}
-}
-
 func (sm *SyncManager) txBroadcastLoop() {
 	for {
 		select {
 		case newTx := <-sm.newTxCh:
+			sm.txNotifyCh <- newTx
 			if err := sm.peers.broadcastTx(newTx); err != nil {
 				log.Errorf("Broadcast new tx error. %v", err)
 				return

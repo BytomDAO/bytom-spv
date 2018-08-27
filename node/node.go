@@ -25,8 +25,6 @@ import (
 	"github.com/bytom/consensus"
 	"github.com/bytom/database/leveldb"
 	"github.com/bytom/env"
-	"github.com/bytom/mining/cpuminer"
-	"github.com/bytom/mining/miningpool"
 	"github.com/bytom/mining/tensority"
 	"github.com/bytom/netsync"
 	"github.com/bytom/protocol"
@@ -47,14 +45,11 @@ type Node struct {
 
 	syncManager *netsync.SyncManager
 
-	//bcReactor    *bc.BlockchainReactor
 	wallet       *w.Wallet
 	accessTokens *accesstoken.CredentialStore
 	api          *api.API
 	chain        *protocol.Chain
 	txfeed       *txfeed.Tracker
-	cpuMiner     *cpuminer.CPUMiner
-	miningPool   *miningpool.MiningPool
 	miningEnable bool
 }
 
@@ -72,8 +67,7 @@ func NewNode(config *cfg.Config) *Node {
 	tokenDB := dbm.NewDB("accesstoken", config.DBBackend, config.DBDir())
 	accessTokens := accesstoken.NewStore(tokenDB)
 
-	txPool := protocol.NewTxPool(store)
-	chain, err := protocol.NewChain(store, txPool)
+	chain, err := protocol.NewChain(store)
 	if err != nil {
 		cmn.Exit(cmn.Fmt("Failed to create chain structure: %v", err))
 	}
@@ -96,26 +90,22 @@ func NewNode(config *cfg.Config) *Node {
 		cmn.Exit(cmn.Fmt("initialize HSM failed: %v", err))
 	}
 
-	if !config.Wallet.Disable {
-		walletDB := dbm.NewDB("wallet", config.DBBackend, config.DBDir())
-		accounts = account.NewManager(walletDB, chain)
-		assets = asset.NewRegistry(walletDB, chain)
-		wallet, err = w.NewWallet(walletDB, accounts, assets, hsm, chain)
-		if err != nil {
-			log.WithField("error", err).Error("init NewWallet")
-		}
-
-		// trigger rescan wallet
-		if config.Wallet.Rescan {
-			wallet.RescanBlocks()
-		}
+	walletDB := dbm.NewDB("wallet", config.DBBackend, config.DBDir())
+	accounts = account.NewManager(walletDB, chain)
+	assets = asset.NewRegistry(walletDB, chain)
+	wallet, err = w.NewWallet(walletDB, accounts, assets, hsm, chain)
+	if err != nil {
+		log.WithField("error", err).Error("init NewWallet")
 	}
+
+	// trigger rescan wallet
+	if config.Wallet.Rescan {
+		wallet.RescanBlocks()
+	}
+
 	newBlockCh := make(chan *bc.Hash, maxNewBlockChSize)
 
-	syncManager, _ := netsync.NewSyncManager(config, chain, txPool, newBlockCh, wallet)
-
-	// get transaction from txPool and send it to syncManager and wallet
-	go newPoolTxListener(txPool, syncManager, wallet)
+	syncManager, _ := netsync.NewSyncManager(config, chain, newBlockCh, wallet)
 
 	// run the profile server
 	profileHost := config.ProfListenAddress
@@ -137,9 +127,6 @@ func NewNode(config *cfg.Config) *Node {
 		miningEnable: config.Mining,
 	}
 
-	node.cpuMiner = cpuminer.NewCPUMiner(chain, accounts, txPool, newBlockCh)
-	node.miningPool = miningpool.NewMiningPool(chain, accounts, txPool, newBlockCh)
-
 	node.BaseService = *cmn.NewBaseService(nil, "Node", node)
 
 	if config.Simd.Enable {
@@ -147,29 +134,6 @@ func NewNode(config *cfg.Config) *Node {
 	}
 
 	return node
-}
-
-// newPoolTxListener listener transaction from txPool, and send it to syncManager and wallet
-func newPoolTxListener(txPool *protocol.TxPool, syncManager *netsync.SyncManager, wallet *w.Wallet) {
-	txMsgCh := txPool.GetMsgCh()
-	syncManagerTxCh := syncManager.GetNewTxCh()
-
-	for {
-		msg := <-txMsgCh
-		switch msg.MsgType {
-		case protocol.MsgNewTx:
-			syncManagerTxCh <- msg.Tx
-			if wallet != nil {
-				wallet.AddUnconfirmedTx(msg.TxDesc)
-			}
-		case protocol.MsgRemoveTx:
-			if wallet != nil {
-				wallet.RemoveUnconfirmedTx(msg.TxDesc)
-			}
-		default:
-			log.Warn("got unknow message type from the txPool channel")
-		}
-	}
 }
 
 // Lock data directory after daemonization
@@ -214,7 +178,7 @@ func launchWebBrowser(port string) {
 }
 
 func (n *Node) initAndstartApiServer() {
-	n.api = api.NewAPI(n.syncManager, n.wallet, n.txfeed, n.cpuMiner, n.miningPool, n.chain, n.config, n.accessTokens)
+	n.api = api.NewAPI(n.syncManager, n.wallet, n.txfeed, n.chain, n.config, n.accessTokens)
 
 	listenAddr := env.String("LISTEN", n.config.ApiAddress)
 	env.Parse()
@@ -222,14 +186,6 @@ func (n *Node) initAndstartApiServer() {
 }
 
 func (n *Node) OnStart() error {
-	if n.miningEnable {
-		if _, err := n.wallet.AccountMgr.GetMiningAddress(); err != nil {
-			n.miningEnable = false
-			log.Error(err)
-		} else {
-			n.cpuMiner.Start()
-		}
-	}
 	if !n.config.VaultMode {
 		n.syncManager.Start()
 	}
@@ -246,9 +202,6 @@ func (n *Node) OnStart() error {
 
 func (n *Node) OnStop() {
 	n.BaseService.OnStop()
-	if n.miningEnable {
-		n.cpuMiner.Stop()
-	}
 	if !n.config.VaultMode {
 		n.syncManager.Stop()
 	}
@@ -263,8 +216,4 @@ func (n *Node) RunForever() {
 
 func (n *Node) SyncManager() *netsync.SyncManager {
 	return n.syncManager
-}
-
-func (n *Node) MiningPool() *miningpool.MiningPool {
-	return n.miningPool
 }
