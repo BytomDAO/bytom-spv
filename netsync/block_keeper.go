@@ -3,6 +3,7 @@ package netsync
 import (
 	"container/list"
 	"time"
+	"encoding/json"
 
 	log "github.com/sirupsen/logrus"
 
@@ -366,10 +367,10 @@ func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
 		return nil
 	}
 
-	var proofHashes []*bc.Hash
+	var txProofHashes []*bc.Hash
 	for _, v := range merkleBlock.TxHashes {
 		hash := bc.NewHash(v)
-		proofHashes = append(proofHashes, &hash)
+		txProofHashes = append(txProofHashes, &hash)
 	}
 
 	flags := merkleBlock.Flags
@@ -378,10 +379,27 @@ func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
 	for _, v := range merkleBlock.Transactions {
 		relatedTxHashes = append(relatedTxHashes, &v.ID)
 	}
-	if !types.ValidateTxMerkleTreeProof(proofHashes, flags, relatedTxHashes, merkleBlock.BlockHeader.TransactionsMerkleRoot) {
-		return errors.New("merkle proof check error")
+	if !types.ValidateTxMerkleTreeProof(txProofHashes, flags, relatedTxHashes, merkleBlock.BlockHeader.TransactionsMerkleRoot) {
+		return errors.New("tx merkle proof check error")
 	}
 
+	var txStatusProofHashes []*bc.Hash
+	for _, v := range merkleBlock.StatusHashes {
+		hash := bc.NewHash(v)
+		txStatusProofHashes = append(txStatusProofHashes, &hash)
+	}
+
+	var relatedStatus []*bc.TxVerifyResult
+	for _, v := range merkleBlock.RawTxStatuses {
+		status := &bc.TxVerifyResult{}
+		if err := json.Unmarshal(v, status); err != nil {
+			return errors.New("tx status unmarshal error")
+		}
+		relatedStatus = append(relatedStatus, status)
+	}
+	if !types.ValidateStatusMerkleTreeProof(txStatusProofHashes, flags, relatedStatus, merkleBlock.BlockHeader.TransactionStatusHash) {
+		return errors.New("tx status merkle proof check error")
+	}
 	return nil
 }
 
