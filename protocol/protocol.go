@@ -68,17 +68,11 @@ func (c *Chain) initChainStatus() error {
 		return err
 	}
 
-	utxoView := state.NewUtxoViewpoint()
-	bcBlock := types.MapBlock(genesisBlock)
-	if err := utxoView.ApplyBlock(bcBlock, txStatus); err != nil {
-		return err
-	}
-
 	node, err := state.NewBlockNode(&genesisBlock.BlockHeader, nil)
 	if err != nil {
 		return err
 	}
-	return c.store.SaveChainStatus(node, utxoView)
+	return c.store.SaveChainStatus(node)
 }
 
 // BestBlockHeight returns the current height of the blockchain.
@@ -125,8 +119,8 @@ func (c *Chain) CalcNextBits(preBlock *bc.Hash) (uint64, error) {
 }
 
 // This function must be called with mu lock in above level
-func (c *Chain) setState(node *state.BlockNode, view *state.UtxoViewpoint) error {
-	if err := c.store.SaveChainStatus(node, view); err != nil {
+func (c *Chain) setState(node *state.BlockNode) error {
+	if err := c.store.SaveChainStatus(node); err != nil {
 		return err
 	}
 

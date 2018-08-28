@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/database/storage"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc"
@@ -82,11 +81,6 @@ func NewStore(db dbm.DB) *Store {
 	}
 }
 
-// GetUtxo will search the utxo in db
-func (s *Store) GetUtxo(hash *bc.Hash) (*storage.UtxoEntry, error) {
-	return getUtxo(s.db, hash)
-}
-
 // BlockExist check if the block is stored in disk
 func (s *Store) BlockExist(hash *bc.Hash) bool {
 	block, err := s.cache.lookup(hash)
@@ -96,11 +90,6 @@ func (s *Store) BlockExist(hash *bc.Hash) bool {
 // GetBlock return the block by given hash
 func (s *Store) GetBlock(hash *bc.Hash) (*types.Block, error) {
 	return s.cache.lookup(hash)
-}
-
-// GetTransactionsUtxo will return all the utxo that related to the input txs
-func (s *Store) GetTransactionsUtxo(view *state.UtxoViewpoint, txs []*bc.Tx) error {
-	return getTransactionsUtxo(s.db, view, txs)
 }
 
 // GetTransactionStatus will return the utxo that related to the block hash
@@ -182,11 +171,8 @@ func (s *Store) SaveBlock(block *types.Block, ts *bc.TransactionStatus) error {
 }
 
 // SaveChainStatus save the core's newest status && delete old status
-func (s *Store) SaveChainStatus(node *state.BlockNode, view *state.UtxoViewpoint) error {
+func (s *Store) SaveChainStatus(node *state.BlockNode) error {
 	batch := s.db.NewBatch()
-	if err := saveUtxoView(batch, view); err != nil {
-		return err
-	}
 
 	bytes, err := json.Marshal(protocol.BlockStoreState{Height: node.Height, Hash: &node.Hash})
 	if err != nil {

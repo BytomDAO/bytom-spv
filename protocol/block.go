@@ -75,9 +75,8 @@ func (c *Chain) calcReorganizeNodes(node *state.BlockNode) ([]*state.BlockNode, 
 
 func (c *Chain) connectBlock(block *types.Block) (err error) {
 	bcBlock := types.MapBlock(block)
-	utxoView := state.NewUtxoViewpoint()
 	node := c.index.GetNode(&bcBlock.ID)
-	if err := c.setState(node, utxoView); err != nil {
+	if err := c.setState(node); err != nil {
 		return err
 	}
 
@@ -85,8 +84,7 @@ func (c *Chain) connectBlock(block *types.Block) (err error) {
 }
 
 func (c *Chain) reorganizeChain(node *state.BlockNode) error {
-	utxoView := state.NewUtxoViewpoint()
-	return c.setState(node, utxoView)
+	return c.setState(node)
 }
 
 // SaveBlock will validate and save block into storage

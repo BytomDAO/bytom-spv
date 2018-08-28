@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/bytom/database/storage"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/state"
@@ -14,12 +13,10 @@ type Store interface {
 	GetBlock(*bc.Hash) (*types.Block, error)
 	GetStoreStatus() *BlockStoreState
 	GetTransactionStatus(*bc.Hash) (*bc.TransactionStatus, error)
-	GetTransactionsUtxo(*state.UtxoViewpoint, []*bc.Tx) error
-	GetUtxo(*bc.Hash) (*storage.UtxoEntry, error)
 
 	LoadBlockIndex() (*state.BlockIndex, error)
 	SaveBlock(*types.Block, *bc.TransactionStatus) error
-	SaveChainStatus(*state.BlockNode, *state.UtxoViewpoint) error
+	SaveChainStatus(*state.BlockNode) error
 }
 
 // BlockStoreState represents the core's db status
