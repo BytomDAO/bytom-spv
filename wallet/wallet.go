@@ -110,8 +110,10 @@ func (w *Wallet) AttachBlock(block *types.Block) error {
 	}
 
 	storeBatch := w.DB.NewBatch()
-	w.indexTransactions(storeBatch, block, txStatus)
-	w.attachUtxos(storeBatch, block, txStatus)
+	if len(txStatus.VerifyStatus) != 0 {
+		w.indexTransactions(storeBatch, block, txStatus)
+		w.attachUtxos(storeBatch, block, txStatus)
+	}
 
 	w.status.WorkHeight = block.Height
 	w.status.WorkHash = block.Hash()

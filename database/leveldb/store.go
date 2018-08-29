@@ -98,8 +98,11 @@ func (s *Store) GetTransactionStatus(hash *bc.Hash) (*bc.TransactionStatus, erro
 	if data == nil {
 		return nil, errors.New("can't find the transaction status by given hash")
 	}
-
 	ts := &bc.TransactionStatus{}
+	if len(data) == 1 && data[0] == 0 {
+		return ts, nil
+	}
+
 	if err := proto.Unmarshal(data, ts); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling transaction status")
 	}
@@ -153,10 +156,12 @@ func (s *Store) SaveBlock(block *types.Block, ts *bc.TransactionStatus) error {
 	if err != nil {
 		return errors.Wrap(err, "Marshal block header")
 	}
-
-	binaryTxStatus, err := proto.Marshal(ts)
-	if err != nil {
-		return errors.Wrap(err, "marshal block transaction status")
+	binaryTxStatus := []byte{0}
+	if ts != nil {
+		binaryTxStatus, err = proto.Marshal(ts)
+		if err != nil {
+			return errors.Wrap(err, "marshal block transaction status")
+		}
 	}
 
 	blockHash := block.Hash()
