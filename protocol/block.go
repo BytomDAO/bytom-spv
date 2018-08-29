@@ -7,7 +7,6 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/state"
-	"github.com/bytom/protocol/validation"
 )
 
 var (
@@ -88,14 +87,11 @@ func (c *Chain) reorganizeChain(node *state.BlockNode) error {
 }
 
 // SaveBlock will validate and save block into storage
-func (c *Chain) saveBlock(block *types.Block) error {
+func (c *Chain) saveBlock(block *types.Block, txStatus *bc.TransactionStatus) error {
 	bcBlock := types.MapBlock(block)
 	parent := c.index.GetNode(&block.PreviousBlockHash)
 
-	if err := validation.ValidateBlock(bcBlock, parent); err != nil {
-		return errors.Sub(ErrBadBlock, err)
-	}
-	if err := c.store.SaveBlock(block, bcBlock.TransactionStatus); err != nil {
+	if err := c.store.SaveBlock(block, txStatus); err != nil {
 		return err
 	}
 
@@ -109,7 +105,8 @@ func (c *Chain) saveBlock(block *types.Block) error {
 	return nil
 }
 
-func (c *Chain) saveSubBlock(block *types.Block) *types.Block {
+//后一个节点的txstatus信息在哪里？
+func (c *Chain) saveSubBlock(block *types.Block, txStatus *bc.TransactionStatus) *types.Block {
 	blockHash := block.Hash()
 	prevOrphans, ok := c.orphanManage.GetPrevOrphans(&blockHash)
 	if !ok {
@@ -123,12 +120,12 @@ func (c *Chain) saveSubBlock(block *types.Block) *types.Block {
 			log.WithFields(log.Fields{"hash": prevOrphan.String()}).Warning("saveSubBlock fail to get block from orphanManage")
 			continue
 		}
-		if err := c.saveBlock(orphanBlock); err != nil {
+		if err := c.saveBlock(orphanBlock, txStatus); err != nil {
 			log.WithFields(log.Fields{"hash": prevOrphan.String(), "height": orphanBlock.Height}).Warning("saveSubBlock fail to save block")
 			continue
 		}
 
-		if subBestBlock := c.saveSubBlock(orphanBlock); subBestBlock.Height > bestBlock.Height {
+		if subBestBlock := c.saveSubBlock(orphanBlock, txStatus); subBestBlock.Height > bestBlock.Height {
 			bestBlock = subBestBlock
 		}
 	}
@@ -141,27 +138,28 @@ type processBlockResponse struct {
 }
 
 type processBlockMsg struct {
-	block *types.Block
-	reply chan processBlockResponse
+	block    *types.Block
+	txStatus *bc.TransactionStatus
+	reply    chan processBlockResponse
 }
 
 // ProcessBlock is the entry for chain update
-func (c *Chain) ProcessBlock(block *types.Block) (bool, error) {
+func (c *Chain) ProcessBlock(block *types.Block, txStatus *bc.TransactionStatus) (bool, error) {
 	reply := make(chan processBlockResponse, 1)
-	c.processBlockCh <- &processBlockMsg{block: block, reply: reply}
+	c.processBlockCh <- &processBlockMsg{block: block, txStatus: txStatus, reply: reply}
 	response := <-reply
 	return response.isOrphan, response.err
 }
 
 func (c *Chain) blockProcesser() {
 	for msg := range c.processBlockCh {
-		isOrphan, err := c.processBlock(msg.block)
+		isOrphan, err := c.processBlock(msg.block, msg.txStatus)
 		msg.reply <- processBlockResponse{isOrphan: isOrphan, err: err}
 	}
 }
 
 // ProcessBlock is the entry for handle block insert
-func (c *Chain) processBlock(block *types.Block) (bool, error) {
+func (c *Chain) processBlock(block *types.Block, txStatus *bc.TransactionStatus) (bool, error) {
 	blockHash := block.Hash()
 	if c.BlockExist(&blockHash) {
 		log.WithFields(log.Fields{"hash": blockHash.String(), "height": block.Height}).Info("block has been processed")
@@ -173,11 +171,11 @@ func (c *Chain) processBlock(block *types.Block) (bool, error) {
 		return true, nil
 	}
 
-	if err := c.saveBlock(block); err != nil {
+	if err := c.saveBlock(block, txStatus); err != nil {
 		return false, err
 	}
 
-	bestBlock := c.saveSubBlock(block)
+	bestBlock := c.saveSubBlock(block, txStatus)
 	bestBlockHash := bestBlock.Hash()
 	bestNode := c.index.GetNode(&bestBlockHash)
 

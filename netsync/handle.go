@@ -39,7 +39,7 @@ type Chain interface {
 	GetHeaderByHash(*bc.Hash) (*types.BlockHeader, error)
 	GetHeaderByHeight(uint64) (*types.BlockHeader, error)
 	InMainChain(bc.Hash) bool
-	ProcessBlock(*types.Block) (bool, error)
+	ProcessBlock(*types.Block, *bc.TransactionStatus) (bool, error)
 }
 
 //SyncManager Sync Manager is responsible for the business layer information synchronization

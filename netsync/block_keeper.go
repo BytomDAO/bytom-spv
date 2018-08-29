@@ -2,8 +2,8 @@ package netsync
 
 import (
 	"container/list"
-	"time"
 	"encoding/json"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -132,9 +132,9 @@ func (bk *blockKeeper) merkleBlockToBlock(merkleBlock *types.MerkleBlock) (*type
 	return block, nil
 }
 
-func (bk *blockKeeper) ProcessMerkleBlock(merkleBlock *types.MerkleBlock) (bool, error) {
+func (bk *blockKeeper) ProcessMerkleBlock(merkleBlock *types.MerkleBlock, txStatus *bc.TransactionStatus) (bool, error) {
 	block, _ := bk.merkleBlockToBlock(merkleBlock)
-	return bk.chain.ProcessBlock(block)
+	return bk.chain.ProcessBlock(block, txStatus)
 }
 
 func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
@@ -170,7 +170,8 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 		if err := bk.VerifyBlockHeader(fastHeader.Value.(*types.BlockHeader), merkleBlock); err != nil {
 			return err
 		}
-		if err := bk.VerifyMerkleBlock(merkleBlock); err != nil {
+		txStatus, err := bk.VerifyMerkleBlock(merkleBlock)
+		if err != nil {
 			return err
 		}
 		blockHash := merkleBlock.Hash()
@@ -182,7 +183,7 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 			return errors.Wrap(err, "fail on fastBlockSync calculate seed")
 		}
 		tensority.AIHash.AddCache(&blockHash, seed, &bc.Hash{})
-		_, err = bk.ProcessMerkleBlock(merkleBlock)
+		_, err = bk.ProcessMerkleBlock(merkleBlock, txStatus)
 		tensority.AIHash.RemoveCache(&blockHash, seed)
 		if err != nil {
 			return errors.Wrap(err, "fail on fastBlockSync process block")
@@ -293,10 +294,11 @@ func (bk *blockKeeper) regularBlockSync(wantHeight uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := bk.VerifyMerkleBlock(merkleBlock); err != nil {
+		txStatus, err := bk.VerifyMerkleBlock(merkleBlock)
+		if err != nil {
 			return err
 		}
-		isOrphan, err := bk.ProcessMerkleBlock(merkleBlock)
+		isOrphan, err := bk.ProcessMerkleBlock(merkleBlock, txStatus)
 		if err != nil {
 			return err
 		}
@@ -362,9 +364,9 @@ func (bk *blockKeeper) VerifyBlockHeader(header *types.BlockHeader, merkleBlock 
 	return nil
 }
 
-func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
+func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) (*bc.TransactionStatus, error) {
 	if len(merkleBlock.Transactions) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	var txProofHashes []*bc.Hash
@@ -380,7 +382,7 @@ func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
 		relatedTxHashes = append(relatedTxHashes, &v.ID)
 	}
 	if !types.ValidateTxMerkleTreeProof(txProofHashes, flags, relatedTxHashes, merkleBlock.BlockHeader.TransactionsMerkleRoot) {
-		return errors.New("tx merkle proof check error")
+		return nil, errors.New("tx merkle proof check error")
 	}
 
 	var txStatusProofHashes []*bc.Hash
@@ -390,17 +392,20 @@ func (bk *blockKeeper) VerifyMerkleBlock(merkleBlock *types.MerkleBlock) error {
 	}
 
 	var relatedStatus []*bc.TxVerifyResult
+	txStatus := &bc.TransactionStatus{}
+
 	for _, v := range merkleBlock.RawTxStatuses {
 		status := &bc.TxVerifyResult{}
 		if err := json.Unmarshal(v, status); err != nil {
-			return errors.New("tx status unmarshal error")
+			return nil, errors.New("tx status unmarshal error")
 		}
 		relatedStatus = append(relatedStatus, status)
+		txStatus.VerifyStatus = append(txStatus.VerifyStatus, status)
 	}
 	if !types.ValidateStatusMerkleTreeProof(txStatusProofHashes, flags, relatedStatus, merkleBlock.BlockHeader.TransactionStatusHash) {
-		return errors.New("tx status merkle proof check error")
+		return nil, errors.New("tx status merkle proof check error")
 	}
-	return nil
+	return txStatus, nil
 }
 
 func (bk *blockKeeper) requireBlocks(locator []*bc.Hash, stopHash *bc.Hash) ([]*types.Block, error) {
