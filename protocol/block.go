@@ -105,8 +105,7 @@ func (c *Chain) saveBlock(block *types.Block, txStatus *bc.TransactionStatus) er
 	return nil
 }
 
-//后一个节点的txstatus信息在哪里？
-func (c *Chain) saveSubBlock(block *types.Block, txStatus *bc.TransactionStatus) *types.Block {
+func (c *Chain) saveSubBlock(block *types.Block) *types.Block {
 	blockHash := block.Hash()
 	prevOrphans, ok := c.orphanManage.GetPrevOrphans(&blockHash)
 	if !ok {
@@ -115,7 +114,7 @@ func (c *Chain) saveSubBlock(block *types.Block, txStatus *bc.TransactionStatus)
 
 	bestBlock := block
 	for _, prevOrphan := range prevOrphans {
-		orphanBlock, ok := c.orphanManage.Get(prevOrphan)
+		orphanBlock, txStatus, ok := c.orphanManage.Get(prevOrphan)
 		if !ok {
 			log.WithFields(log.Fields{"hash": prevOrphan.String()}).Warning("saveSubBlock fail to get block from orphanManage")
 			continue
@@ -125,7 +124,7 @@ func (c *Chain) saveSubBlock(block *types.Block, txStatus *bc.TransactionStatus)
 			continue
 		}
 
-		if subBestBlock := c.saveSubBlock(orphanBlock, txStatus); subBestBlock.Height > bestBlock.Height {
+		if subBestBlock := c.saveSubBlock(orphanBlock); subBestBlock.Height > bestBlock.Height {
 			bestBlock = subBestBlock
 		}
 	}
@@ -167,7 +166,7 @@ func (c *Chain) processBlock(block *types.Block, txStatus *bc.TransactionStatus)
 	}
 
 	if parent := c.index.GetNode(&block.PreviousBlockHash); parent == nil {
-		c.orphanManage.Add(block)
+		c.orphanManage.Add(block, txStatus)
 		return true, nil
 	}
 
@@ -175,7 +174,7 @@ func (c *Chain) processBlock(block *types.Block, txStatus *bc.TransactionStatus)
 		return false, err
 	}
 
-	bestBlock := c.saveSubBlock(block, txStatus)
+	bestBlock := c.saveSubBlock(block)
 	bestBlockHash := bestBlock.Hash()
 	bestNode := c.index.GetNode(&bestBlockHash)
 

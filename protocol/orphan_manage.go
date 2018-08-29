@@ -17,6 +17,7 @@ var (
 
 type orphanBlock struct {
 	*types.Block
+	*bc.TransactionStatus
 	expiration time.Time
 }
 
@@ -47,7 +48,7 @@ func (o *OrphanManage) BlockExist(hash *bc.Hash) bool {
 }
 
 // Add will add the block to OrphanManage
-func (o *OrphanManage) Add(block *types.Block) {
+func (o *OrphanManage) Add(block *types.Block, txStatus *bc.TransactionStatus) {
 	blockHash := block.Hash()
 	o.mtx.Lock()
 	defer o.mtx.Unlock()
@@ -56,7 +57,7 @@ func (o *OrphanManage) Add(block *types.Block) {
 		return
 	}
 
-	o.orphan[blockHash] = &orphanBlock{block, time.Now().Add(orphanBlockTTL)}
+	o.orphan[blockHash] = &orphanBlock{block, txStatus, time.Now().Add(orphanBlockTTL)}
 	o.prevOrphans[block.PreviousBlockHash] = append(o.prevOrphans[block.PreviousBlockHash], &blockHash)
 
 	log.WithFields(log.Fields{"hash": blockHash.String(), "height": block.Height}).Info("add block to orphan")
@@ -70,11 +71,11 @@ func (o *OrphanManage) Delete(hash *bc.Hash) {
 }
 
 // Get return the orphan block by hash
-func (o *OrphanManage) Get(hash *bc.Hash) (*types.Block, bool) {
+func (o *OrphanManage) Get(hash *bc.Hash) (*types.Block, *bc.TransactionStatus, bool) {
 	o.mtx.RLock()
 	block, ok := o.orphan[*hash]
 	o.mtx.RUnlock()
-	return block.Block, ok
+	return block.Block, block.TransactionStatus, ok
 }
 
 // GetPrevOrphans return the list of child orphans
