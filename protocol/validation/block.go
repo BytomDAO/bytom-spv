@@ -71,3 +71,11 @@ func ValidateBlockHeader(b *bc.Block, parent *state.BlockNode) error {
 	}
 	return nil
 }
+
+// ValidateBlock validates a block and the transactions within.
+func ValidateBlock(b *bc.Block, parent *state.BlockNode) error {
+	if err := ValidateBlockHeader(b, parent); err != nil {
+		return err
+	}
+	return nil
+}

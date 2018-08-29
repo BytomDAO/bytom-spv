@@ -7,6 +7,7 @@ import (
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/state"
+	"github.com/bytom/protocol/validation"
 )
 
 var (
@@ -90,6 +91,9 @@ func (c *Chain) reorganizeChain(node *state.BlockNode) error {
 func (c *Chain) saveBlock(block *types.Block, txStatus *bc.TransactionStatus) error {
 	bcBlock := types.MapBlock(block)
 	parent := c.index.GetNode(&block.PreviousBlockHash)
+	if err := validation.ValidateBlock(bcBlock, parent); err != nil {
+		return errors.Sub(ErrBadBlock, err)
+	}
 
 	if err := c.store.SaveBlock(block, txStatus); err != nil {
 		return err
