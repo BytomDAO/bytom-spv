@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/tendermint/go-crypto"
@@ -22,7 +23,6 @@ import (
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/version"
 	"github.com/bytom/wallet"
-	"sync"
 )
 
 const (
