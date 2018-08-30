@@ -35,7 +35,7 @@ $ go env GOROOT GOPATH
 - Get the source code
 
 ``` bash
-$ git clone https://github.com/bytom-spv/bytom-spv.git $GOPATH/src/github.com/bytom
+$ git clone https://github.com/bytom-spv/bytom-spv.git $GOPATH/src/github.com/bytom-spv
 ```
 
 - Build source code
