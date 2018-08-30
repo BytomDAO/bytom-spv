@@ -8,8 +8,8 @@ import (
 
 	"github.com/tendermint/go-wire"
 
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 //protocol msg byte

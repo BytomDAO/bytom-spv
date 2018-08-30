@@ -5,13 +5,13 @@ import (
 	stdjson "encoding/json"
 	"errors"
 
-	"github.com/bytom/common"
-	"github.com/bytom/consensus"
-	"github.com/bytom/encoding/json"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/vm"
-	"github.com/bytom/protocol/vm/vmutil"
+	"github.com/bytom-spv/common"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/encoding/json"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/vm"
+	"github.com/bytom-spv/protocol/vm/vmutil"
 )
 
 var retirementProgram = []byte{byte(vm.OP_FAIL)}

@@ -8,9 +8,9 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/bytom/encoding/blockchain"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/encoding/blockchain"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestSerializationSpendCommitment(t *testing.T) {

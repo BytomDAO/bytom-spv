@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/bytom/blockchain/txbuilder"
-	"github.com/bytom/crypto/ed25519/chainkd"
+	"github.com/bytom-spv/blockchain/txbuilder"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
 )
 
 type keyIns struct {

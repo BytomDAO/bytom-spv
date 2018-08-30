@@ -6,13 +6,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/account"
-	"github.com/bytom/consensus"
-	"github.com/bytom/consensus/segwit"
-	"github.com/bytom/crypto/sha3pool"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/account"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/consensus/segwit"
+	"github.com/bytom-spv/crypto/sha3pool"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 // GetAccountUtxos return all account unspent outputs

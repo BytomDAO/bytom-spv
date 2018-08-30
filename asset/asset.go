@@ -10,16 +10,16 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/bytom/blockchain/signers"
-	"github.com/bytom/common"
-	"github.com/bytom/consensus"
-	"github.com/bytom/crypto/ed25519"
-	"github.com/bytom/crypto/ed25519/chainkd"
-	chainjson "github.com/bytom/encoding/json"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/vm/vmutil"
+	"github.com/bytom-spv/blockchain/signers"
+	"github.com/bytom-spv/common"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/crypto/ed25519"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
+	chainjson "github.com/bytom-spv/encoding/json"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/vm/vmutil"
 )
 
 // DefaultNativeAsset native BTM asset

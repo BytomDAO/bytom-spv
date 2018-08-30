@@ -4,8 +4,8 @@ import (
 	"errors"
 	"math/rand"
 
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 type Chain struct {

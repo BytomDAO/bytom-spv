@@ -12,8 +12,8 @@ import (
 
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/crypto/sha3pool"
-	"github.com/bytom/errors"
+	"github.com/bytom-spv/crypto/sha3pool"
+	"github.com/bytom-spv/errors"
 )
 
 const tokenSize = 32

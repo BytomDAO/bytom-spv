@@ -7,9 +7,9 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/test/mock"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/test/mock"
 )
 
 type P2PPeer struct {

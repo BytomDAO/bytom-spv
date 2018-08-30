@@ -8,8 +8,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/bytom/encoding/blockchain"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/encoding/blockchain"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestSerializationTxOutput(t *testing.T) {

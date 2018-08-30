@@ -8,13 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/account"
-	"github.com/bytom/asset"
-	"github.com/bytom/blockchain/query"
-	"github.com/bytom/crypto/sha3pool"
-	chainjson "github.com/bytom/encoding/json"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/account"
+	"github.com/bytom-spv/asset"
+	"github.com/bytom-spv/blockchain/query"
+	"github.com/bytom-spv/crypto/sha3pool"
+	chainjson "github.com/bytom-spv/encoding/json"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 const (

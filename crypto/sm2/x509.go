@@ -45,7 +45,7 @@ import (
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/bytom/crypto/sm3"
+	"github.com/bytom-spv/crypto/sm3"
 )
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo

@@ -12,14 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/account"
-	"github.com/bytom/asset"
-	"github.com/bytom/blockchain/pseudohsm"
-	"github.com/bytom/consensus"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/validation"
-	"github.com/bytom/protocol/vm"
+	"github.com/bytom-spv/account"
+	"github.com/bytom-spv/asset"
+	"github.com/bytom-spv/blockchain/pseudohsm"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/validation"
+	"github.com/bytom-spv/protocol/vm"
 )
 
 func init() {

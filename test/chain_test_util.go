@@ -7,14 +7,14 @@ import (
 
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/blockchain/txbuilder"
-	"github.com/bytom/consensus"
-	"github.com/bytom/database/leveldb"
-	"github.com/bytom/database/storage"
-	"github.com/bytom/protocol"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/vm"
+	"github.com/bytom-spv/blockchain/txbuilder"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/database/leveldb"
+	"github.com/bytom-spv/database/storage"
+	"github.com/bytom-spv/protocol"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/vm"
 	"github.com/golang/protobuf/proto"
 )
 

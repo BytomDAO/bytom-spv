@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bytom/crypto/ed25519"
-	"github.com/bytom/errors"
+	"github.com/bytom-spv/crypto/ed25519"
+	"github.com/bytom-spv/errors"
 )
 
 const dirPath = "testdata/pseudo"

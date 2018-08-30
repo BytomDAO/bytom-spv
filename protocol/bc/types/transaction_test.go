@@ -10,10 +10,10 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestTransaction(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bytom/common/bech32"
-	"github.com/bytom/consensus"
+	"github.com/bytom-spv/common/bech32"
+	"github.com/bytom-spv/consensus"
 )
 
 var (

@@ -14,15 +14,15 @@ import (
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 
-	"github.com/bytom/account"
-	cfg "github.com/bytom/config"
-	"github.com/bytom/consensus"
-	"github.com/bytom/p2p"
-	"github.com/bytom/p2p/discover"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/version"
-	"github.com/bytom/wallet"
+	"github.com/bytom-spv/account"
+	cfg "github.com/bytom-spv/config"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/p2p"
+	"github.com/bytom-spv/p2p/discover"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/version"
+	"github.com/bytom-spv/wallet"
 )
 
 const (

@@ -5,11 +5,11 @@ Bytom SPV Wallet
 
 **Official golang implementation of the Bytom SPV Wallet.**
 
-Automated builds are available for stable releases and the unstable master branch. Binary archives are published at https://github.com/Bytom/bytom-spv/releases.
+Automated builds are available for stable releases and the unstable master branch. Binary archives are published at https://github.com/bytom-spv/bytom-spv/releases.
 
 ## What is Bytom SPV Wallet?
 
-Bytom is software designed to operate and connect to highly scalable blockchain networks confirming to the Bytom Blockchain Protocol, which allows partipicants to define, issue and transfer digitial assets on a multi-asset shared ledger. Please refer to the [White Paper](https://github.com/Bytom/wiki/blob/master/White-Paper/%E6%AF%94%E5%8E%9F%E9%93%BE%E6%8A%80%E6%9C%AF%E7%99%BD%E7%9A%AE%E4%B9%A6-%E8%8B%B1%E6%96%87%E7%89%88.md) for more details.
+Bytom is software designed to operate and connect to highly scalable blockchain networks confirming to the Bytom Blockchain Protocol, which allows partipicants to define, issue and transfer digitial assets on a multi-asset shared ledger. Please refer to the [White Paper](https://github.com/bytom-spv/wiki/blob/master/White-Paper/%E6%AF%94%E5%8E%9F%E9%93%BE%E6%8A%80%E6%9C%AF%E7%99%BD%E7%9A%AE%E4%B9%A6-%E8%8B%B1%E6%96%87%E7%89%88.md) for more details.
 
 In the current state `bytom spv wallet` is able to:
 
@@ -35,7 +35,7 @@ $ go env GOROOT GOPATH
 - Get the source code
 
 ``` bash
-$ git clone https://github.com/Bytom/bytom-spv.git $GOPATH/src/github.com/bytom
+$ git clone https://github.com/bytom-spv/bytom-spv.git $GOPATH/src/github.com/bytom
 ```
 
 - Build source code
@@ -115,7 +115,7 @@ What is more,
 + if you are using _Mac_, please make sure _llvm_ is installed by `brew install llvm`.
 + if you are using _Windows_, please make sure _mingw-w64_ is installed and set up the _PATH_ environment variable accordingly.
 
-For more details about using `bytomcli` command please refer to [API Reference](https://github.com/Bytom/bytom/wiki/API-Reference)
+For more details about using `bytomcli` command please refer to [API Reference](https://github.com/bytom-spv/bytom/wiki/API-Reference)
 
 ### Dashboard
 
@@ -133,13 +133,13 @@ Ensure your [Docker](https://www.docker.com/) version is 17.05 or higher.
 $ docker build -t bytom .
 ```
 
-For the usage please refer to [running-in-docker-wiki](https://github.com/Bytom/bytom/wiki/Running-in-Docker).
+For the usage please refer to [running-in-docker-wiki](https://github.com/bytom-spv/bytom/wiki/Running-in-Docker).
 
 ## Contributing
 
 Thank you for considering helping out with the source code! Any contributions are highly appreciated, and we are grateful for even the smallest of fixes!
 
-If you run into an issue, feel free to [bytom issues](https://github.com/Bytom/bytom/issues/) in this repository. We are glad to help!
+If you run into an issue, feel free to [bytom issues](https://github.com/bytom-spv/bytom/issues/) in this repository. We are glad to help!
 
 ## License
 

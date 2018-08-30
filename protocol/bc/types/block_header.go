@@ -6,10 +6,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/bytom/encoding/blockchain"
-	"github.com/bytom/encoding/bufpool"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
+	"github.com/bytom-spv/encoding/blockchain"
+	"github.com/bytom-spv/encoding/bufpool"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
 )
 
 // BlockHeader defines information about a block and is used in the Bytom

@@ -7,11 +7,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/errors"
-	"github.com/bytom/mining/tensority"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/mining/tensority"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 const (

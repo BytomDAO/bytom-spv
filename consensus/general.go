@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"strings"
 
-	"github.com/bytom/protocol/bc"
+	"github.com/bytom-spv/protocol/bc"
 )
 
 //consensus variables

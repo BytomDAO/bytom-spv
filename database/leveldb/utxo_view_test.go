@@ -6,10 +6,10 @@ import (
 
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/database/storage"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/state"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/database/storage"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/state"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestSaveUtxoView(t *testing.T) {

@@ -10,11 +10,11 @@ import (
 
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/crypto/ed25519/chainkd"
-	"github.com/bytom/database/leveldb"
-	"github.com/bytom/protocol"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
+	"github.com/bytom-spv/database/leveldb"
+	"github.com/bytom-spv/protocol"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestDefineAssetWithLowercase(t *testing.T) {

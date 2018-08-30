@@ -3,10 +3,10 @@ package difficulty
 import (
 	"math/big"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/mining/tensority"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/mining/tensority"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 var (

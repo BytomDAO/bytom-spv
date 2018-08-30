@@ -8,8 +8,8 @@ import (
 
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestAddUnconfirmedUtxo(t *testing.T) {

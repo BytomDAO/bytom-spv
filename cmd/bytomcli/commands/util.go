@@ -7,10 +7,10 @@ import (
 
 	jww "github.com/spf13/jwalterweatherman"
 
-	"github.com/bytom/crypto/ed25519/chainkd"
-	"github.com/bytom/encoding/json"
-	chainjson "github.com/bytom/encoding/json"
-	"github.com/bytom/util"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
+	"github.com/bytom-spv/encoding/json"
+	chainjson "github.com/bytom-spv/encoding/json"
+	"github.com/bytom-spv/util"
 )
 
 // accountIns is used for account related request.

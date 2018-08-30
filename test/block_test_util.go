@@ -1,12 +1,12 @@
 package test
 
 import (
-	"github.com/bytom/mining/tensority"
-	"github.com/bytom/protocol"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/validation"
-	"github.com/bytom/protocol/vm"
+	"github.com/bytom-spv/mining/tensority"
+	"github.com/bytom-spv/protocol"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/validation"
+	"github.com/bytom-spv/protocol/vm"
 )
 
 // NewBlock create block according to the current status of chain

@@ -19,7 +19,7 @@ package number
 import (
 	"math/big"
 
-	"github.com/bytom/common"
+	"github.com/bytom-spv/common"
 )
 
 var tt256 = new(big.Int).Lsh(big.NewInt(1), 256)

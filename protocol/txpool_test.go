@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/database/storage"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/state"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/database/storage"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/state"
+	"github.com/bytom-spv/testutil"
 )
 
 var testTxs = []*types.Tx{

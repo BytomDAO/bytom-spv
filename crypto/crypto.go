@@ -17,7 +17,7 @@
 package crypto
 
 import (
-	"github.com/bytom/common"
+	"github.com/bytom-spv/common"
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 )

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/bytom/encoding/blockchain"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
+	"github.com/bytom-spv/encoding/blockchain"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
 )
 
 // serflag variables for input types.

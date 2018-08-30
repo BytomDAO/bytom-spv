@@ -5,12 +5,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/bytom/api"
-	"github.com/bytom/consensus"
-	"github.com/bytom/consensus/difficulty"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/util"
+	"github.com/bytom-spv/api"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/consensus/difficulty"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/util"
 )
 
 const (

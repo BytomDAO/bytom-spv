@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bytom/crypto/ed25519/internal/edwards25519"
+	"github.com/bytom-spv/crypto/ed25519/internal/edwards25519"
 )
 
 type zeroReader struct{}

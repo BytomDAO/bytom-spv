@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/test/mock"
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/test/mock"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestAppendHeaderList(t *testing.T) {

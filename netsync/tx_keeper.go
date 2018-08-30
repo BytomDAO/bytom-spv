@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 const (

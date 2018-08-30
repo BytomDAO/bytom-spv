@@ -8,10 +8,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/bytom/account"
-	"github.com/bytom/blockchain/query"
-	"github.com/bytom/crypto/sha3pool"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/account"
+	"github.com/bytom-spv/blockchain/query"
+	"github.com/bytom-spv/crypto/sha3pool"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 const (

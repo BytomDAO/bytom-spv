@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc/types"
 )
 
 // NewBuilder return new TemplateBuilder instance

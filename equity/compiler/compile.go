@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 
-	chainjson "github.com/bytom/encoding/json"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/vm"
-	"github.com/bytom/protocol/vm/vmutil"
+	chainjson "github.com/bytom-spv/encoding/json"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/vm"
+	"github.com/bytom-spv/protocol/vm/vmutil"
 )
 
 // ValueInfo describes how a blockchain value is used in a contract

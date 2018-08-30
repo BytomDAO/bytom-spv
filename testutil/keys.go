@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"github.com/bytom/crypto/ed25519"
-	"github.com/bytom/crypto/ed25519/chainkd"
+	"github.com/bytom-spv/crypto/ed25519"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
 )
 
 var (

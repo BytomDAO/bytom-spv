@@ -13,8 +13,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/bytom/blockchain/query"
-	"github.com/bytom/util"
+	"github.com/bytom-spv/blockchain/query"
+	"github.com/bytom-spv/util"
 )
 
 type config struct {

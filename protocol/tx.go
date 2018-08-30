@@ -1,8 +1,8 @@
 package protocol
 
 import (
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
 )
 
 // ErrBadTx is returned for transactions failing validation

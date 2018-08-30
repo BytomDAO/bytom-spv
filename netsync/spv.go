@@ -1,7 +1,7 @@
 package netsync
 
 import (
-	"github.com/bytom/account"
+	"github.com/bytom-spv/account"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -3,7 +3,7 @@ package vm
 import (
 	"testing"
 
-	"github.com/bytom/testutil"
+	"github.com/bytom-spv/testutil"
 )
 
 func TestBitwiseOps(t *testing.T) {

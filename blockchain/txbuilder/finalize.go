@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/bytom/consensus"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/vm"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/vm"
 )
 
 var (

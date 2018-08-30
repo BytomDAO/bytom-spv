@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/bytom/blockchain/signers"
-	"github.com/bytom/blockchain/txbuilder"
-	"github.com/bytom/common"
-	"github.com/bytom/consensus"
-	"github.com/bytom/crypto/ed25519/chainkd"
-	"github.com/bytom/errors"
-	"github.com/bytom/protocol/bc"
-	"github.com/bytom/protocol/bc/types"
-	"github.com/bytom/protocol/vm/vmutil"
+	"github.com/bytom-spv/blockchain/signers"
+	"github.com/bytom-spv/blockchain/txbuilder"
+	"github.com/bytom-spv/common"
+	"github.com/bytom-spv/consensus"
+	"github.com/bytom-spv/crypto/ed25519/chainkd"
+	"github.com/bytom-spv/errors"
+	"github.com/bytom-spv/protocol/bc"
+	"github.com/bytom-spv/protocol/bc/types"
+	"github.com/bytom-spv/protocol/vm/vmutil"
 )
 
 //DecodeSpendAction unmarshal JSON-encoded data of spend action
