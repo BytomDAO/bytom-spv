@@ -162,6 +162,9 @@ func (bk *blockKeeper) fastBlockSync(checkPoint *consensus.Checkpoint) error {
 
 	fastHeader := bk.headerList.Front()
 	for bk.chain.BestBlockHeight() <= checkPoint.Height {
+		if bk.chain.BestBlockHeight() == 0 {
+			fastHeader = fastHeader.Next()
+		}
 		hash := fastHeader.Value.(*types.BlockHeader).Hash()
 		merkleBlock, err := bk.requireMerkleBlock(fastHeader.Value.(*types.BlockHeader).Height, &hash)
 		if err != nil {
