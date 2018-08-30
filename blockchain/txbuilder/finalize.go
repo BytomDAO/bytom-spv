@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/bytom/consensus"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/vm"
@@ -16,12 +17,22 @@ var (
 	ErrMissingRawTx = errors.New("missing raw tx")
 	// ErrBadInstructionCount means too many signing instructions compare with inputs
 	ErrBadInstructionCount = errors.New("too many signing instructions in template")
+	// ErrOrphanTx means submit transaction is orphan
+	ErrOrphanTx = errors.New("finalize can't find transaction input utxo")
+	// ErrExtTxFee means transaction fee exceed max limit
+	ErrExtTxFee = errors.New("transaction fee exceed max limit")
 )
 
 // FinalizeTx validates a transaction signature template,
 // assembles a fully signed tx, and stores the effects of
 // its changes on the UTXO set.
-func FinalizeTx(ctx context.Context, txCh chan *types.Tx,tx *types.Tx) error {
+func FinalizeTx(ctx context.Context, txCh chan *types.Tx, tx *types.Tx) error {
+	// maxTxFee means max transaction fee, maxTxFee = 0.4BTM * 25 = 10BTM
+	maxTxFee := consensus.MaxGasAmount * consensus.VMGasRate * 25
+	if fee := calculateTxFee(tx); fee > uint64(maxTxFee) {
+		return ErrExtTxFee
+	}
+
 	if err := checkTxSighashCommitment(tx); err != nil {
 		return err
 	}
@@ -118,3 +129,24 @@ func (rg *RemoteGenerator) Submit(ctx context.Context, tx *types.Tx) error {
 	return err
 }
 */
+
+// calculateTxFee calculate transaction fee
+func calculateTxFee(tx *types.Tx) (fee uint64) {
+	totalInputBTM := uint64(0)
+	totalOutputBTM := uint64(0)
+
+	for _, input := range tx.Inputs {
+		if input.InputType() != types.CoinbaseInputType && input.AssetID() == *consensus.BTMAssetID {
+			totalInputBTM += input.Amount()
+		}
+	}
+
+	for _, output := range tx.Outputs {
+		if *output.AssetId == *consensus.BTMAssetID {
+			totalOutputBTM += output.Amount
+		}
+	}
+
+	fee = totalInputBTM - totalOutputBTM
+	return
+}

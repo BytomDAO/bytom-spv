@@ -400,6 +400,7 @@ func initDiscover(config *cfg.Config, priv *crypto.PrivKeyEd25519, port uint16) 
 	}
 	nodes := []*discover.Node{}
 	for _, seed := range strings.Split(config.P2P.Seeds, ",") {
+		version.Status.AddSeed(seed)
 		url := "enode://" + hex.EncodeToString(crypto.Sha256([]byte(seed))) + "@" + seed
 		nodes = append(nodes, discover.MustParseNode(url))
 	}
