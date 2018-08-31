@@ -14,57 +14,45 @@ PACKAGES += 'github.com/bytom-spv/mining/tensority/go_algorithm'
 
 BUILD_FLAGS := -ldflags "-X github.com/bytom-spv/version.GitCommit=`git rev-parse HEAD`"
 
-BYTOMD_BINARY32 := bytom-spv-wallet-$(GOOS)_386
-BYTOMD_BINARY64 := bytomd-spv-wallet-$(GOOS)_amd64
+BYTOM_SPV_BINARY32 := bytom-spv-wallet-$(GOOS)_386
+BYTOM_SPV_BINARY64 := bytomd-spv-wallet-$(GOOS)_amd64
 
 VERSION := $(shell awk -F= '/Version =/ {print $$2}' version/version.go | tr -d "\" ")
 
-MINER_RELEASE32 := miner-$(VERSION)-$(GOOS)_386
-MINER_RELEASE64 := miner-$(VERSION)-$(GOOS)_amd64
 
-BYTOMD_RELEASE32 := bytomd-$(VERSION)-$(GOOS)_386
-BYTOMD_RELEASE64 := bytomd-$(VERSION)-$(GOOS)_amd64
+BYTOM_SPV_RELEASE32 := bytom-$(VERSION)-$(GOOS)_386
+BYTOM_SPV_RELEASE64 := bytom-$(VERSION)-$(GOOS)_amd64
 
-BYTOMCLI_RELEASE32 := bytomcli-$(VERSION)-$(GOOS)_386
-BYTOMCLI_RELEASE64 := bytomcli-$(VERSION)-$(GOOS)_amd64
-
-BYTOM_RELEASE32 := bytom-$(VERSION)-$(GOOS)_386
-BYTOM_RELEASE64 := bytom-$(VERSION)-$(GOOS)_amd64
 
 all: test target release-all
 
-bytomd:
-	@echo "Building bytomd to cmd/bytomd/bytomd"
-	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
-
-bytomd-simd:
-	@echo "Building SIMD version bytomd to cmd/bytomd/bytomd"
-	@cd mining/tensority/cgo_algorithm/lib/ && make
-	@go build -tags="simd" $(BUILD_FLAGS) -o cmd/bytomd/bytomd cmd/bytomd/main.go
+bytom-spv:
+	@echo "Building bytom-spv-wallet to cmd/bytomd/bytom-spv-wallet"
+	@go build $(BUILD_FLAGS) -o cmd/bytomd/bytom-spv-wallet cmd/bytomd/main.go
 
 target:
 	mkdir -p $@
 
-binary: target/$(BYTOMD_BINARY32) target/$(BYTOMD_BINARY64) target/$(BYTOMCLI_BINARY32) target/$(BYTOMCLI_BINARY64) target/$(MINER_BINARY32) target/$(MINER_BINARY64)
+binary: target/$(BYTOM_SPV_BINARY32) target/$(BYTOM_SPV_BINARY64)
 
 ifeq ($(GOOS),windows)
 release: binary
-	cd target && cp -f $(BYTOMD_BINARY32) $(BYTOMD_BINARY32).exe
-	cd target && md5sum $(BYTOMD_BINARY32).exe >$(BYTOM_RELEASE32).md5
-	cd target && zip $(BYTOM_RELEASE32).zip $(BYTOMD_BINARY32).exe $(BYTOM_RELEASE32).md5
-	cd target && rm -f  $(BYTOMD_BINARY32)  $(BYTOM_RELEASE32).md5
-	cd target && cp -f $(BYTOMD_BINARY64) $(BYTOMD_BINARY64).exe
-	cd target && md5sum $(BYTOMD_BINARY64).exe >$(BYTOM_RELEASE64).md5
-	cd target && zip $(BYTOM_RELEASE64).zip  $(BYTOMD_BINARY64).exe $(BYTOM_RELEASE64).md5
-	cd target && rm -f $(BYTOMD_BINARY64)   $(BYTOMD_BINARY64).exe $(BYTOM_RELEASE64).md5
+	cd target && cp -f $(BYTOM_SPV_BINARY32) $(BYTOM_SPV_BINARY32).exe
+	cd target && md5sum $(BYTOM_SPV_BINARY32).exe >$(BYTOM_SPV_RELEASE32).md5
+	cd target && zip $(BYTOM_SPV_RELEASE32).zip $(BYTOM_SPV_BINARY32).exe $(BYTOM_SPV_RELEASE32).md5
+	cd target && rm -f  $(BYTOM_SPV_BINARY32) $(BYTOM_SPV_BINARY32).exe $(BYTOM_SPV_RELEASE32).md5
+	cd target && cp -f $(BYTOM_SPV_BINARY64) $(BYTOM_SPV_BINARY64).exe
+	cd target && md5sum $(BYTOM_SPV_BINARY64).exe >$(BYTOM_SPV_RELEASE64).md5
+	cd target && zip $(BYTOM_SPV_RELEASE64).zip  $(BYTOM_SPV_BINARY64).exe $(BYTOM_SPV_RELEASE64).md5
+	cd target && rm -f $(BYTOM_SPV_BINARY64)   $(BYTOM_SPV_BINARY64).exe $(BYTOM_SPV_RELEASE64).md5
 else
 release: binary
-	cd target && md5sum  $(BYTOMD_BINARY32)  >$(BYTOM_RELEASE32).md5
-	cd target && tar -czf $(BYTOM_RELEASE32).tgz  $(BYTOMD_BINARY32)  $(BYTOM_RELEASE32).md5
-	cd target && rm -f  $(BYTOMD_BINARY32)  $(BYTOM_RELEASE32).md5
-	cd target && md5sum  $(BYTOMD_BINARY64)  >$(BYTOM_RELEASE64).md5
-	cd target && tar -czf $(BYTOM_RELEASE64).tgz  $(BYTOMD_BINARY64)  $(BYTOM_RELEASE64).md5
-	cd target && rm -f  $(BYTOMD_BINARY64)  $(BYTOM_RELEASE64).md5
+	cd target && md5sum  $(BYTOM_SPV_BINARY32)  >$(BYTOM_SPV_RELEASE32).md5
+	cd target && tar -czf $(BYTOM_SPV_RELEASE32).tgz  $(BYTOM_SPV_BINARY32)  $(BYTOM_SPV_RELEASE32).md5
+	cd target && rm -f  $(BYTOM_SPV_BINARY32)  $(BYTOM_SPV_RELEASE32).md5
+	cd target && md5sum  $(BYTOM_SPV_BINARY64)  >$(BYTOM_SPV_RELEASE64).md5
+	cd target && tar -czf $(BYTOM_SPV_RELEASE64).tgz  $(BYTOM_SPV_BINARY64)  $(BYTOM_SPV_RELEASE64).md5
+	cd target && rm -f  $(BYTOM_SPV_BINARY64)  $(BYTOM_SPV_RELEASE64).md5
 endif
 
 release-all: clean
@@ -85,10 +73,10 @@ clean:
 	@rm -rf crypto/sm2/*.pem
 	@echo "Done."
 
-target/$(BYTOMD_BINARY32):
+target/$(BYTOM_SPV_BINARY32):
 	CGO_ENABLED=0 GOARCH=386 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
-target/$(BYTOMD_BINARY64):
+target/$(BYTOM_SPV_BINARY64):
 	CGO_ENABLED=0 GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ cmd/bytomd/main.go
 
 test:
